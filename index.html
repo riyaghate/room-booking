@@ -136,15 +136,36 @@
     }
 
     .room-label {
-      background: #f0f0f0;
+      background-color: #003366;
+      color: white;
       font-weight: bold;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 8px;
+      border-radius: 6px;
+      text-align: center;
     }
-
+    .time-label {
+      background-color: #e6f0ff;
+      color: #003366;
+      font-size: 12px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 6px;
+      border-radius: 6px;
+      text-align: center;
+    }
     .available {
       background: #9fe6ae;
       cursor: pointer;
     }
-
+    .available:hover {
+      background: #7ab887;
+    }
     .selected {
       background: #fff176;
     }
@@ -159,6 +180,10 @@
       background: #ddd;
       color: #999;
       cursor: not-allowed;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
     }
 
     .legend {
