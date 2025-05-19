@@ -198,6 +198,7 @@
       text-align: center;
       margin-top: 20px;
       line-height: 1.8;
+      color: #244564;
     }
 
     .legend div {
@@ -230,7 +231,7 @@
   <div id="auth-section" style="margin-bottom: 20px;">
     <button id="sign-in-google">Sign in with Google</button>
     <button id="sign-in-microsoft">Sign in with Microsoft</button>
-    <span id="user-email" style="margin-left: 15px;"></span>
+    <span id="user-email" style="margin-left: 15px; font-weight: bold;"></span>
   </div>
 
   <div class="header">
@@ -327,7 +328,18 @@
         const isAdmin = await checkIfAdmin(user.email);
 
         // Update UI
-        document.getElementById("user-email").textContent = `Signed in as: ${user.email}${isAdmin ? " (Admin)" : ""}`;
+        if (user.displayName) {
+          const [firstName, ...rest] = user.displayName.split(" ");
+          const lastName = rest.join(" ");
+          document.getElementById("fname").value = firstName || "";
+          document.getElementById("lname").value = lastName || "";
+        }
+        let fullName = user.displayName || "";
+        if (!fullName) {
+        // fallback to fname/lname from form if displayName is missing
+          fullName = `${document.getElementById("fname").value} ${document.getElementById("lname").value}`;
+        }
+        document.getElementById("user-email").textContent = `${fullName} – ${user.email}${isAdmin ? " (Admin)" : ""}`;
         document.getElementById("sign-in-google").style.display = "none";
         document.getElementById("sign-in-microsoft").style.display = "none";
         document.getElementById("sign-out").style.display = "inline-block";
