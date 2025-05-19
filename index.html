@@ -240,7 +240,7 @@
     <button id="sign-out" style="display: none;">Sign Out</button>
   </div>
 
-  <div class="date-controls">
+  <div id="date-controls" class="date-controls">
     <button onclick="changeDate(-1)"><strong>&lt</strong> Previous</button>
       <div id="custom-date-wrapper">
         <input type="date" id="date-picker" />
@@ -315,7 +315,7 @@
         const domain = user.email.split("@")[1];
         const allowedDomains = ["k12insight.com", "sogolytics.com", "zarca.com"];
         document.getElementById("app-container").style.display = "block";
-
+        document.getElementById("date-controls").style.display = "flex";
         if (!allowedDomains.includes(domain)) {
           alert("Access denied: unauthorized domain.");
           firebase.auth().signOut();
@@ -360,6 +360,7 @@
         document.getElementById("sign-in-microsoft").style.display = "inline-block";
         document.getElementById("sign-out").style.display = "none";
         document.getElementById("app-container").style.display = "none";
+        document.getElementById("date-controls").style.display = "none";
       }
     });
 
