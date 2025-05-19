@@ -2,6 +2,7 @@
 <html>
 
 <head>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <title>Room Booking</title>
   <style>
     body {
@@ -31,6 +32,7 @@
       left: 50%;
       transform: translateX(-50%);
       font-size: 20px;
+      
     }
 
     #sign-out {
@@ -130,7 +132,7 @@
     }
 
     .available {
-      background: #e6a1cf;
+      background: #9fe6ae;
       cursor: pointer;
     }
 
@@ -187,7 +189,7 @@
 
   <div class="header">
     <h1>Room Booking</h1>
-    <div id="clock"></div>
+    <div id="clock"><i class="fa-solid fa-clock"></i> --:--</div>
     <button id="sign-out" style="display: none;">Sign Out</button>
   </div>
 
@@ -318,7 +320,8 @@
     const nowEST = () => new Date(new Date().toLocaleString("en-US", { timeZone: "America/New_York" }));
 
     function updateClock() {
-      document.getElementById("clock").textContent = nowEST().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) + " EST";
+      document.getElementById("clock").innerHTML = `<i class="fa-solid fa-clock"></i> ${nowEST().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })} EST`;
+
     }
     setInterval(updateClock, 1000);
     updateClock();
