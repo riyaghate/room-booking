@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 
-<head> 
+<head>
   <title>Room Booking</title>
   <style>
     body {
@@ -15,22 +15,22 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      background-color: #003366;
+      background-color: #244564;
       color: white;
-      padding: 10px 20px;
+      padding: 20px 20px;
       border-radius: 8px;
       margin-bottom: 20px;
     }
 
     .header h1 {
         margin: 0;
-        font-size: 24px;
+        font-size: 29px;
     }
     #clock {
       position: absolute;
       left: 50%;
       transform: translateX(-50%);
-      font-size: 16px;
+      font-size: 20px;
     }
 
     #sign-out {
@@ -52,15 +52,15 @@
       align-items: center;
       gap: 12px;
       margin: 20px auto;
-      flex-wrap: wrap;
       background: #e6f0ff;
       padding: 12px 16px;
       border-radius: 8px;
+      width: fit-content;
       max-width: 600px;
     }
     .date-controls button {
       padding: 8px 12px;
-      background-color: #004080;
+      background-color: #244564;
       color: white;
       border: none;
       border-radius: 5px;
@@ -88,7 +88,32 @@
       margin: 20px auto;
       max-width: 90vw;
     }
-
+    #sign-in-google {
+      padding: 8px 12px;
+      background-color: #244564;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    #sign-in-google:hover {
+      background-color: #003060;
+    }
+    #sign-in-microsoft {
+      padding: 8px 12px;
+      background-color: #244564;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    #sign-in-microsoft:hover {
+      background-color: #003060;
+    }
     .room-label,
     .time-label,
     .slot {
@@ -149,6 +174,7 @@
       width: 100%;
       margin-bottom: 10px;
     }
+    
   </style>
 </head>
 
@@ -165,16 +191,16 @@
     <button id="sign-out" style="display: none;">Sign Out</button>
   </div>
 
-  <div class="date-controls"
-    style="display: flex; justify-content: center; align-items: center; flex-wrap: wrap; gap: 10px; margin: 20px 0;">
-    <button onclick="changeDate(-1)">Previous Day</button>
-    <div id="custom-date-wrapper" style="cursor: pointer; display: inline-flex; align-items: center; gap: 5px;">
-      <label for="date-picker">Select a date:</label>
-      <input type="date" id="date-picker" />
-    </div>
-    <button onclick="changeDate(1)">Next Day</button>
+  <div class="date-controls">
+    <button onclick="changeDate(-1)"><strong>&lt</strong> Previous</button>
+      <div id="custom-date-wrapper">
+        <label for="date-picker">Select a date:</label>
+        <input type="date" id="date-picker" />
+      </div>
+    <button onclick="changeDate(1)">Next <strong>&gt</strong></button>
     <button onclick="goToToday()">Today</button>
   </div>
+
 
 
   <div id="app-container" style="display: none;">
