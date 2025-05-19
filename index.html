@@ -213,16 +213,54 @@
     #booking-form,
     #unbooking-form {
       display: none;
-      margin: 20px auto;
-      max-width: 300px;
+      background-color: #ffffff;
+      max-width: 350px;
+      margin: 30px auto;
+      padding: 24px;
+      border-radius: 10px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+      font-family: 'Segoe UI', sans-serif;
       text-align: left;
     }
-
+    #booking-form h3 {
+      margin-top: 0;
+      margin-bottom: 16px;
+      font-size: 20px;
+      text-align: center;
+      color: #003366;
+    }
     #booking-form input,
     #unbooking-form input {
       width: 100%;
-      margin-bottom: 10px;
+      padding: 10px 12px;
+      margin-bottom: 14px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 14px;
+      box-sizing: border-box;
+      transition: border-color 0.2s ease;
     }
+    #booking-form input:focus {
+      border-color: #007bff;
+      outline: none;
+    }
+
+    #booking-form button {
+      width: 100%;
+      padding: 12px;
+      background-color: #004080;
+      color: white;
+      font-weight: bold;
+      font-size: 14px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+    }
+
+#booking-form button:hover {
+  background-color: #002f66;
+}
     
   </style>
 </head>
