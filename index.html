@@ -366,10 +366,7 @@
 
         // ✅ Check if user is admin from Firestore
         const isAdmin = await checkIfAdmin(user.email);
-        if (isAdmin) {
-          document.getElementById("admin-log").style.display = "block";
-          loadAdminLog();
-        }
+
         // Update UI
         if (user.displayName) {
           const [firstName, ...rest] = user.displayName.split(" ");
@@ -572,15 +569,6 @@
           email,
           reason
         });
-        await db.collection("booking_logs").add({
-          timestamp: new Date(),
-          user: `${fname} ${lname}`,
-          email,
-          action: "Booked",
-          room: rooms[rIdx],
-          date: selectedDate,
-          time: times[tIdx],
-        });
       }
 
       document.getElementById("fname").value = "";
@@ -603,15 +591,6 @@
       const isAdmin = await checkIfAdmin(currentUser.email); // force check here
       if (isAdmin || isOwner) {
         await db.collection("bookings").doc(unbookingSlot.id).delete();
-        await db.collection("booking_logs").add({
-          timestamp: new Date(),
-          user: currentUser.displayName || currentUser.email,
-          email: currentUser.email,
-          action: "Unbooked",
-          room: unbookingSlot.room,
-          date: unbookingSlot.date,
-          time: unbookingSlot.time,
-        });
         unbookingSlot = null;
         document.getElementById("unbooking-form").style.display = "none";
         await loadBookings();
@@ -684,22 +663,6 @@
         }
       }, 0);
     });
-    async function loadAdminLog() {
-      const logList = document.getElementById("log-list");
-      logList.innerHTML = "";
-
-      const snapshot = await db.collection("booking_logs")
-        .orderBy("timestamp", "desc")
-        .limit(50)
-        .get();
-
-      snapshot.forEach(doc => {
-        const { timestamp, user, action, room, date, time } = doc.data();
-        const logItem = document.createElement("li");
-        logItem.textContent = `[${new Date(timestamp.toDate()).toLocaleString()}] ${user} ${action} ${room} on ${date} at ${time}`;
-        logList.appendChild(logItem);
-      });
-    }
 
   </script>
 </body>
