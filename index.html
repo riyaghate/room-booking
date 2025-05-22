@@ -263,24 +263,7 @@
     #booking-form button:hover {
       background-color: #002f66;
     }
-    #admin-log h2 {
-      text-align: center;
-      color: #244564;
-      margin-bottom: 12px;
-    }
-
-    #log-table th,
-    #log-table td {
-      border: 1px solid #ccc;
-      padding: 8px;
-      text-align: left;
-      font-size: 14px;
-    }
-
-    #log-table th {
-      background-color: #e6f0ff;
-      color: #244564;
-    }
+    
 
   </style>
 </head>
@@ -338,20 +321,11 @@
     </div>
   </div>
   <div id="admin-log" style="display: none; margin-top: 30px;">
-  <h2>All Bookings</h2>
-  <table id="log-table" style="width: 100%; border-collapse: collapse;">
-    <thead>
-      <tr>
-        <th>Date</th>
-        <th>Time</th>
-        <th>Room</th>
-        <th>Name</th>
-        <th>Email</th>
-        <th>Reason</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
+    <h2>Booking Activity Log</h2>
+    <ul id="log-list" style="list-style: none; padding: 0;"></ul>
+  </div>
+
+  
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
@@ -604,6 +578,15 @@
           email,
           reason
         });
+        await db.collection("booking_logs").add({
+          timestamp: new Date(),
+          user: `${fname} ${lname}`,
+          email,
+          action: "Booked",
+          room: rooms[rIdx],
+          date: selectedDate,
+          time: times[tIdx],
+        });
       }
 
       document.getElementById("fname").value = "";
@@ -626,6 +609,15 @@
       const isAdmin = await checkIfAdmin(currentUser.email); // force check here
       if (isAdmin || isOwner) {
         await db.collection("bookings").doc(unbookingSlot.id).delete();
+        await db.collection("booking_logs").add({
+          timestamp: new Date(),
+          user: currentUser.displayName || currentUser.email,
+          email: currentUser.email,
+          action: "Unbooked",
+          room: unbookingSlot.room,
+          date: unbookingSlot.date,
+          time: unbookingSlot.time,
+          });
         unbookingSlot = null;
         document.getElementById("unbooking-form").style.display = "none";
         await loadBookings();
@@ -633,30 +625,7 @@
         alert("You can only unbook your own reservations.");
       }
     }
-    async function loadAdminLog() {
-      const tbody = document.querySelector("#log-table tbody");
-      tbody.innerHTML = "";
-
-      try {
-        const snapshot = await db.collection("bookings").orderBy("date").get();
-        snapshot.forEach(doc => {
-          const { date, time, room, name, email, reason } = doc.data();
-
-          const row = document.createElement("tr");
-          row.innerHTML = `
-            <td>${date}</td>
-            <td>${time}</td>
-            <td>${room}</td>
-            <td>${name}</td>
-            <td>${email}</td>
-            <td>${reason}</td>
-          `;
-          tbody.appendChild(row);
-        });
-      } catch (error) {
-        console.error("Error loading admin log:", error);
-      }   
-    }
+    
 
     function cancelUnbooking() {
       document.getElementById("unbooking-form").style.display = "none";
@@ -722,6 +691,19 @@
         }
       }, 0);
     });
+    async function loadAdminLog() {
+      const logList = document.getElementById("log-list");
+      logList.innerHTML = "";
+
+      const snapshot = await db.collection("booking_logs").orderBy("timestamp", "desc").limit(50).get();
+
+    snapshot.forEach(doc => {
+      const { timestamp, user, action, room, date, time } = doc.data();
+      const logItem = document.createElement("li");
+      logItem.textContent = `[${new Date(timestamp.toDate()).toLocaleString()}] ${user} ${action} ${room} on ${date} at ${time}`;
+      logList.appendChild(logItem);
+    });
+}
 
   </script>
 </body>
