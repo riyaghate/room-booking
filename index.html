@@ -260,11 +260,10 @@
       transition: background-color 0.2s ease;
     }
 
-    #booking-form button:hover {
-      background-color: #002f66;
-    }
+#booking-form button:hover {
+  background-color: #002f66;
+}
     
-
   </style>
 </head>
 
@@ -320,12 +319,7 @@
       <div style="background:#ddd;"></div> Past
     </div>
   </div>
-  <div id="admin-log" style="display: none; margin-top: 30px;">
-    <h2>Booking Activity Log</h2>
-    <ul id="log-list" style="list-style: none; padding: 0;"></ul>
-  </div>
 
-  
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
@@ -374,7 +368,7 @@
         const isAdmin = await checkIfAdmin(user.email);
         if (isAdmin) {
           document.getElementById("admin-log").style.display = "block";
-          loadAdminLog(); // fetch all bookings
+          loadAdminLog();
         }
         // Update UI
         if (user.displayName) {
@@ -617,7 +611,7 @@
           room: unbookingSlot.room,
           date: unbookingSlot.date,
           time: unbookingSlot.time,
-          });
+        });
         unbookingSlot = null;
         document.getElementById("unbooking-form").style.display = "none";
         await loadBookings();
@@ -625,7 +619,6 @@
         alert("You can only unbook your own reservations.");
       }
     }
-    
 
     function cancelUnbooking() {
       document.getElementById("unbooking-form").style.display = "none";
@@ -695,15 +688,18 @@
       const logList = document.getElementById("log-list");
       logList.innerHTML = "";
 
-      const snapshot = await db.collection("booking_logs").orderBy("timestamp", "desc").limit(50).get();
+      const snapshot = await db.collection("booking_logs")
+        .orderBy("timestamp", "desc")
+        .limit(50)
+        .get();
 
-    snapshot.forEach(doc => {
-      const { timestamp, user, action, room, date, time } = doc.data();
-      const logItem = document.createElement("li");
-      logItem.textContent = `[${new Date(timestamp.toDate()).toLocaleString()}] ${user} ${action} ${room} on ${date} at ${time}`;
-      logList.appendChild(logItem);
-    });
-}
+      snapshot.forEach(doc => {
+        const { timestamp, user, action, room, date, time } = doc.data();
+        const logItem = document.createElement("li");
+        logItem.textContent = `[${new Date(timestamp.toDate()).toLocaleString()}] ${user} ${action} ${room} on ${date} at ${time}`;
+        logList.appendChild(logItem);
+      });
+    }
 
   </script>
 </body>
