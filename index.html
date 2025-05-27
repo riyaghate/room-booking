@@ -560,19 +560,6 @@
       }
 
       for (const id of selectedSlots) {
-        // ✅ Prevent duplicate bookings
-        const existing = await db.collection("bookings")
-          .where("date", "==", selectedDate)
-          .where("room", "==", rooms[rIdx])
-          .where("time", "==", times[tIdx])
-          .where("email", "==", email)
-          .get();
-
-        if (!existing.empty) {
-          alert(`You already booked ${rooms[rIdx]} at ${times[tIdx]}`);
-          continue; // skip this slot
-        }
-        // ✅ Only runs if no duplicate found
         const [rIdx, tIdx] = id.split("-").map(Number);
         await db.collection("bookings").add({
           date: selectedDate,
