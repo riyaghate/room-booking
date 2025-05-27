@@ -325,6 +325,9 @@
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 
   <script>
+    let isMouseDown = false;
+    let isSelecting = true; // true = selecting, false = unselecting
+
     const firebaseConfig = {
       apiKey: "AIzaSyAv2l6sulhI9Rq2P-TB1DXpUlrWIB2BUqE",
       authDomain: "roombookinggrid.firebaseapp.com",
@@ -531,24 +534,53 @@
           }
           else {
             div.classList.add("available");
-            div.onclick = () => {
-              if (div.classList.contains("selected")) {
-                div.classList.remove("selected");
-                selectedSlots.splice(selectedSlots.indexOf(id), 1);
-              } else {
+
+            // ✅ Mouse down starts selection
+            div.onmousedown = (e) => {
+              e.preventDefault(); // prevent text selection
+              isMouseDown = true;
+              const alreadySelected = div.classList.contains("selected");
+              isSelecting = !alreadySelected;
+
+              if (isSelecting) {
                 div.classList.add("selected");
                 selectedSlots.push(id);
+              } else {
+                div.classList.remove("selected");
+                selectedSlots.splice(selectedSlots.indexOf(id), 1);
               }
+
               document.getElementById("booking-form").style.display = selectedSlots.length ? "block" : "none";
               document.getElementById("unbooking-form").style.display = "none";
             };
+
+            // ✅ Mouse enter to expand selection
+            div.onmouseenter = () => {
+              if (isMouseDown) {
+                if (isSelecting && !div.classList.contains("selected")) {
+                  div.classList.add("selected");
+                  selectedSlots.push(id);
+                } else if (!isSelecting && div.classList.contains("selected")) {
+                  div.classList.remove("selected");
+                  selectedSlots.splice(selectedSlots.indexOf(id), 1);
+                }
+
+                document.getElementById("booking-form").style.display = selectedSlots.length ? "block" : "none";
+                document.getElementById("unbooking-form").style.display = "none";
+              }
+            };
+
+            // Prevent text/image drag artifacts
+            div.ondragstart = () => false;
           }
 
           grid.appendChild(div);
         });
       });
     }
-
+    document.addEventListener("mouseup", () => {
+      isMouseDown = false;
+    });
     async function submitBooking() {
       const fname = document.getElementById("fname").value.trim();
       const lname = document.getElementById("lname").value.trim();
@@ -561,6 +593,18 @@
 
       for (const id of selectedSlots) {
         const [rIdx, tIdx] = id.split("-").map(Number);
+        // ✅ Prevent duplicate bookings
+        const existing = await db.collection("bookings")
+          .where("date", "==", selectedDate)
+          .where("room", "==", rooms[rIdx])
+          .where("time", "==", times[tIdx])
+          .where("email", "==", email)
+          .get();
+
+        if (!existing.empty) {
+          alert(`You already booked ${rooms[rIdx]} at ${times[tIdx]}`);
+          continue; // skip this slot
+        }
         await db.collection("bookings").add({
           date: selectedDate,
           room: rooms[rIdx],
