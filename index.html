@@ -534,7 +534,9 @@
           }
           else {
             div.classList.add("available");
-
+            if (selectedSlots.includes(id)) {
+              div.classList.add("selected");
+            }
             // ✅ Mouse down starts selection
             div.onmousedown = (e) => {
               e.preventDefault(); // prevent text selection
@@ -544,7 +546,7 @@
 
               if (isSelecting) {
                 div.classList.add("selected");
-                selectedSlots.push(id);
+                if (!selectedSlots.includes(id)) selectedSlots.push(id);
               } else {
                 div.classList.remove("selected");
                 selectedSlots.splice(selectedSlots.indexOf(id), 1);
@@ -559,7 +561,7 @@
               if (isMouseDown) {
                 if (isSelecting && !div.classList.contains("selected")) {
                   div.classList.add("selected");
-                  selectedSlots.push(id);
+                  if (!selectedSlots.includes(id)) selectedSlots.push(id);
                 } else if (!isSelecting && div.classList.contains("selected")) {
                   div.classList.remove("selected");
                   selectedSlots.splice(selectedSlots.indexOf(id), 1);
