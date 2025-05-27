@@ -521,7 +521,6 @@
             }
 
             div.onclick = () => {
-              selectedSlots.length = 0;
               document.querySelectorAll(".selected").forEach(e => e.classList.remove("selected"));
               unbookingSlot = match;
               document.getElementById("unbooking-info").innerText =
@@ -540,18 +539,20 @@
             
             // ✅ Mouse down starts selection
             div.onmousedown = (e) => {
-              e.preventDefault(); // prevent text selection
+              e.preventDefault();
               isMouseDown = true;
               const alreadySelected = div.classList.contains("selected");
               isSelecting = !alreadySelected;
 
+              // Don't clear all selectedSlots here!
               if (isSelecting) {
-                div.classList.add("selected");
-                if (!selectedSlots.includes(id)) selectedSlots.push(id);
+                if (!selectedSlots.includes(id)) {
+                  selectedSlots.push(id);
+                  div.classList.add("selected");
+                }
               } else {
+                selectedSlots.splice(selectedSlots.indexOf(id), 1);
                 div.classList.remove("selected");
-                const index = selectedSlots.indexOf(id);
-                if (index > -1) selectedSlots.splice(index, 1);
               }
 
               document.getElementById("booking-form").style.display = selectedSlots.length ? "block" : "none";
@@ -567,7 +568,7 @@
                 } else if (!isSelecting && div.classList.contains("selected")) {
                   div.classList.remove("selected");
                   const index = selectedSlots.indexOf(id);
-                  if (index > -1) selectedSlots.splice(index, 1);
+                if (index !== -1) selectedSlots.splice(index, 1);
                 }
 
                 document.getElementById("booking-form").style.display = selectedSlots.length ? "block" : "none";
@@ -660,11 +661,15 @@
         const clickedSlot = e.target.classList.contains("available");
         const clickedInsideForm = bookingForm.contains(e.target);
 
-        if (bookingForm.style.display === "block" && !clickedSlot && !clickedInsideForm) {
+        if (bookingForm.style.display === "block" &&
+          !clickedSlot &&
+          !clickedInsideForm &&
+          !e.target.classList.contains("selected")) {
           selectedSlots.length = 0;
           document.querySelectorAll(".selected").forEach(el => el.classList.remove("selected"));
           bookingForm.style.display = "none";
         }
+
       }, 0);
     });
     const wrapper = document.getElementById("custom-date-wrapper");
