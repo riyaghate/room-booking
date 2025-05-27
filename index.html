@@ -326,10 +326,7 @@
 
   <script>
     let isMouseDown = false;
-    let isSelecting = true;
-
-let selectionStarted = null;
- // true = selecting, false = unselecting
+    let isSelecting = true; // true = selecting, false = unselecting
 
     const firebaseConfig = {
       apiKey: "AIzaSyAv2l6sulhI9Rq2P-TB1DXpUlrWIB2BUqE",
@@ -421,7 +418,7 @@ let selectionStarted = null;
     });
 
     const grid = document.getElementById("grid");
-    const selectedSlots = [];
+    const selectedSlots = new Set();
     const nowEST = () => new Date(new Date().toLocaleString("en-US", { timeZone: "America/New_York" }));
 
     function updateClock() {
@@ -477,7 +474,20 @@ let selectionStarted = null;
       return `${hour12}:${minute.toString().padStart(2, '0')} ${ampm}`;
     }
 
-    function drawGrid() {
+    
+function toggleSlotSelection(id, div, shouldSelect) {
+  if (shouldSelect) {
+    div.classList.add("selected");
+    selectedSlots.add(id);
+  } else {
+    div.classList.remove("selected");
+    selectedSlots.delete(id);
+  }
+  document.getElementById("booking-form").style.display = selectedSlots.size ? "block" : "none";
+  document.getElementById("unbooking-form").style.display = "none";
+}
+
+function drawGrid() {
       grid.innerHTML = "";
       grid.appendChild(document.createElement("div"));
 
@@ -521,7 +531,7 @@ let selectionStarted = null;
             }
 
             div.onclick = () => {
-              selectedSlots.length = 0;
+              selectedSlots.clear();
               document.querySelectorAll(".selected").forEach(e => e.classList.remove("selected"));
               unbookingSlot = match;
               document.getElementById("unbooking-info").innerText =
@@ -537,85 +547,27 @@ let selectionStarted = null;
           }
           else {
             div.classList.add("available");
+          if (selectedSlots.has(id)) div.classList.add("selected");
             if (selectedSlots.includes(id)) {
               div.classList.add("selected");
             }
             // ✅ Mouse down starts selection
+            
 div.onmousedown = (e) => {
   e.preventDefault();
   isMouseDown = true;
-  selectionStarted = id;
-
-  const alreadySelected = selectedSlots.includes(id);
-  isSelecting = !alreadySelected;
-
-  if (isSelecting && !alreadySelected) {
-    div.classList.add("selected");
-    selectedSlots.push(id);
-  } else if (!isSelecting && alreadySelected) {
-    div.classList.remove("selected");
-    const index = selectedSlots.indexOf(id);
-    if (index > -1) selectedSlots.splice(index, 1);
-  }
-
-  document.getElementById("booking-form").style.display = selectedSlots.length ? "block" : "none";
-  document.getElementById("unbooking-form").style.display = "none";
+  isSelecting = !div.classList.contains("selected");
+  toggleSlotSelection(id, div, isSelecting);
 };
 
-            div.onmousedown = (e) => {
-              e.preventDefault(); // prevent text selection
-              isMouseDown = true;
-              const alreadySelected = div.classList.contains("selected");
-              isSelecting = !alreadySelected;
-
-              if (isSelecting) {
-                div.classList.add("selected");
-                if (!selectedSlots.includes(id)) selectedSlots.push(id);
-              } else {
-                div.classList.remove("selected");
-                selectedSlots.splice(selectedSlots.indexOf(id), 1);
-              }
-
-              document.getElementById("booking-form").style.display = selectedSlots.length ? "block" : "none";
-              document.getElementById("unbooking-form").style.display = "none";
-            };
-
-            // ✅ Mouse enter to expand selection
 div.onmouseenter = () => {
   if (isMouseDown) {
-    const alreadySelected = selectedSlots.includes(id);
-
-    if (isSelecting && !alreadySelected) {
-      div.classList.add("selected");
-      selectedSlots.push(id);
-    } else if (!isSelecting && alreadySelected) {
-      div.classList.remove("selected");
-      const index = selectedSlots.indexOf(id);
-      if (index > -1) selectedSlots.splice(index, 1);
-    }
-
-    document.getElementById("booking-form").style.display = selectedSlots.length ? "block" : "none";
-    document.getElementById("unbooking-form").style.display = "none";
+    toggleSlotSelection(id, div, isSelecting);
   }
 };
 
-            div.onmouseenter = () => {
-              if (isMouseDown) {
-                if (isSelecting && !div.classList.contains("selected")) {
-                  div.classList.add("selected");
-                  if (!selectedSlots.includes(id)) selectedSlots.push(id);
-                } else if (!isSelecting && div.classList.contains("selected")) {
-                  div.classList.remove("selected");
-                  selectedSlots.splice(selectedSlots.indexOf(id), 1);
-                }
+div.ondragstart = () => false;
 
-                document.getElementById("booking-form").style.display = selectedSlots.length ? "block" : "none";
-                document.getElementById("unbooking-form").style.display = "none";
-              }
-            };
-
-            // Prevent text/image drag artifacts
-            div.ondragstart = () => false;
           }
 
           grid.appendChild(div);
@@ -663,7 +615,7 @@ div.onmouseenter = () => {
       document.getElementById("lname").value = "";
       document.getElementById("email").value = "";
       document.getElementById("reason").value = "";
-      selectedSlots.length = 0;
+      selectedSlots.clear();
       document.getElementById("booking-form").style.display = "none";
       await loadBookings();
     }
@@ -700,7 +652,7 @@ div.onmouseenter = () => {
         const clickedInsideForm = bookingForm.contains(e.target);
 
         if (bookingForm.style.display === "block" && !clickedSlot && !clickedInsideForm) {
-          selectedSlots.length = 0;
+          selectedSlots.clear();
           document.querySelectorAll(".selected").forEach(el => el.classList.remove("selected"));
           bookingForm.style.display = "none";
         }
