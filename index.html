@@ -497,6 +497,9 @@
           const div = document.createElement("div");
           div.className = "slot";
           div.dataset.id = id;
+          if (selectedSlots.includes(id)) {
+            div.classList.add("selected");
+          }
 
           const [hour, min] = time.split(":");
           const slotTime = new Date(`${selectedDate}T${hour}:${min}:00`);
@@ -534,9 +537,7 @@
           }
           else {
             div.classList.add("available");
-            if (selectedSlots.includes(id)) {
-              div.classList.add("selected");
-            }
+            
             // ✅ Mouse down starts selection
             div.onmousedown = (e) => {
               e.preventDefault(); // prevent text selection
@@ -549,7 +550,8 @@
                 if (!selectedSlots.includes(id)) selectedSlots.push(id);
               } else {
                 div.classList.remove("selected");
-                selectedSlots.splice(selectedSlots.indexOf(id), 1);
+                const index = selectedSlots.indexOf(id);
+                if (index > -1) selectedSlots.splice(index, 1);
               }
 
               document.getElementById("booking-form").style.display = selectedSlots.length ? "block" : "none";
@@ -564,7 +566,8 @@
                   if (!selectedSlots.includes(id)) selectedSlots.push(id);
                 } else if (!isSelecting && div.classList.contains("selected")) {
                   div.classList.remove("selected");
-                  selectedSlots.splice(selectedSlots.indexOf(id), 1);
+                  const index = selectedSlots.indexOf(id);
+                  if (index > -1) selectedSlots.splice(index, 1);
                 }
 
                 document.getElementById("booking-form").style.display = selectedSlots.length ? "block" : "none";
