@@ -260,9 +260,25 @@
       transition: background-color 0.2s ease;
     }
 
-#booking-form button:hover {
-  background-color: #002f66;
-}
+    #booking-form button:hover {
+      background-color: #002f66;
+    }
+    #admin-log ul {
+      padding: 0;
+      list-style-type: none;
+    }
+
+    #admin-log li {
+      background-color: #f0f4f8;
+      padding: 10px 14px;
+      margin-bottom: 6px;
+      border-radius: 8px;
+      font-family: "Segoe UI", sans-serif;
+      font-size: 14px;
+      color: #333;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      line-height: 1.4;
+    }
     
   </style>
 </head>
@@ -414,6 +430,10 @@
         document.getElementById("date-controls").style.display = "none";
       }
     });
+    function formatDate(isoDate) {
+      const options = { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' };
+      return new Date(isoDate).toLocaleDateString(undefined, options);
+    }
     async function loadActivityLog() {
       const logList = document.getElementById("log-list");
       logList.innerHTML = "";
@@ -426,7 +446,7 @@
         const log = doc.data();
         const time = new Date(log.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         const li = document.createElement("li");
-        li.textContent = `[${time}] ${log.email} ${log.action.toLowerCase()} ${log.room} for ${log.time} on ${log.date}`;
+        li.textContent = `[${time}] ${log.email} ${log.action.toLowerCase()} ${log.room} for ${log.time} on ${formatDate(log.date)}`;
         logList.appendChild(li);
       });
     }
