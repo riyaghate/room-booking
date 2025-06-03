@@ -616,6 +616,8 @@
     async function logEvent(action, room, time, email) {
       try {
         const timestamp = new Date().toISOString();
+        console.log("Logging event:", { action, room, time, email, date: selectedDate });
+
         await db.collection("activityLog").add({
           timestamp,
           action,
@@ -624,9 +626,11 @@
           email,
           date: selectedDate
         });
+
+        console.log("✅ Event successfully logged.");
       } catch (err) {
-        console.error("Failed to log event:", err);
-      }      
+        console.error("❌ Failed to log event:", err);
+      }
     }
 
     async function submitBooking() {
