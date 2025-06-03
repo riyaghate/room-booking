@@ -319,6 +319,11 @@
       <div style="background:#ddd;"></div> Past
     </div>
   </div>
+  <div id="admin-log" style="display: none; margin-top: 30px; text-align: left; max-width: 800px; margin-left: auto; margin-right: auto;">
+    <h3>Activity Log</h3>
+    <ul id="log-list" style="list-style-type: none; padding: 0;"></ul>
+  </div>
+
 
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
@@ -369,7 +374,10 @@
 
         // ✅ Check if user is admin from Firestore
         const isAdmin = await checkIfAdmin(user.email);
-
+        if (isAdmin) {
+          document.getElementById("admin-log").style.display = "block";
+          loadActivityLog();
+        }
         // Update UI
         if (user.displayName) {
           const [firstName, ...rest] = user.displayName.split(" ");
@@ -406,7 +414,22 @@
         document.getElementById("date-controls").style.display = "none";
       }
     });
+    async function loadActivityLog() {
+      const logList = document.getElementById("log-list");
+      logList.innerHTML = "";
+      const snapshot = await db.collection("activityLog")
+        .where("date", "==", selectedDate)
+        .orderBy("timestamp", "desc")
+        .get();
 
+      snapshot.forEach(doc => {
+        const log = doc.data();
+        const time = new Date(log.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        const li = document.createElement("li");
+        li.textContent = `[${time}] ${log.email} ${log.action} ${log.room} at ${log.time}`;
+        logList.appendChild(li);
+      });
+    }
 
 
 
@@ -465,6 +488,9 @@
       const snapshot = await db.collection("bookings").where("date", "==", selectedDate).get();
       snapshot.forEach(doc => bookings.push({ id: doc.id, ...doc.data() }));
       drawGrid();
+      if (currentUser && await checkIfAdmin(currentUser.email)) {
+        loadActivityLog();
+      }
     }
 
     function formatTo12Hour(timeStr) {
@@ -587,6 +613,18 @@
     document.addEventListener("mouseup", () => {
       isMouseDown = false;
     });
+    async function logEvent(action, room, time, email) {
+      const timestamp = new Date().toISOString();
+      await db.collection("activityLog").add({
+        timestamp,
+        action,
+        room,
+        time,
+        email,
+        date: selectedDate
+    });
+  } 
+
     async function submitBooking() {
       const fname = document.getElementById("fname").value.trim();
       const lname = document.getElementById("lname").value.trim();
@@ -619,6 +657,7 @@
           email,
           reason
         });
+        await logEvent("Booked", rooms[rIdx], times[tIdx], email);
       }
 
       document.getElementById("fname").value = "";
@@ -641,6 +680,7 @@
       const isAdmin = await checkIfAdmin(currentUser.email); // force check here
       if (isAdmin || isOwner) {
         await db.collection("bookings").doc(unbookingSlot.id).delete();
+        await logEvent("Unbooked", unbookingSlot.room, unbookingSlot.time, currentUser.email);
         unbookingSlot = null;
         document.getElementById("unbooking-form").style.display = "none";
         await loadBookings();
