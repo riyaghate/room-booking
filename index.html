@@ -444,9 +444,16 @@
 
       snapshot.forEach(doc => {
         const log = doc.data();
-        const time = new Date(log.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        const actionTime = new Date(log.timestamp).toLocaleString([], {
+          weekday: 'short',
+          month: 'short',
+          day: 'numeric',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        });
         const li = document.createElement("li");
-        li.textContent = `[${time}] ${log.email} ${log.action.toLowerCase()} ${log.room} for ${log.time} on ${formatDate(log.date)}`;
+        li.textContent = `[${actionTime}] ${log.email} ${log.action.toLowerCase()} "${log.room}" for ${log.time} on ${formatDate(log.date)}`;
         logList.appendChild(li);
       });
     }
