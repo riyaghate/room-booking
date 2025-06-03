@@ -426,7 +426,7 @@
         const log = doc.data();
         const time = new Date(log.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         const li = document.createElement("li");
-        li.textContent = `[${time}] ${log.email} ${log.action} ${log.room} at ${log.time}`;
+        li.textContent = `[${time}] ${log.email} ${log.action.toLowerCase()} ${log.room} for ${log.time} on ${log.date}`;
         logList.appendChild(li);
       });
     }
