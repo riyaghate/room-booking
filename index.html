@@ -703,7 +703,22 @@
         console.error("❌ Failed to log event:", err);
       }
     }
-
+    async function logAdminAction(actionDescription, email) {
+      try {
+        const timestamp = new Date().toISOString();
+        await db.collection("activityLog").add({
+          timestamp,
+          action: actionDescription,  // e.g. "Deleted old bookings and logs"
+          room: "-",                   // no specific room
+          time: "-",                   // no specific time
+          email,
+          date: timestamp.split("T")[0]  // store current date as string YYYY-MM-DD
+        });
+        console.log(`✅ Admin action logged: ${actionDescription}`);
+      } catch (err) {
+        console.error("❌ Failed to log admin action:", err);
+      }
+    }
     async function submitBooking() {
       const fname = document.getElementById("fname").value.trim();
       const lname = document.getElementById("lname").value.trim();
@@ -866,6 +881,8 @@
 
         statusEl.style.color = "green";
         statusEl.textContent = `Deleted bookings and logs older than ${retentionDays} days.`;
+        // Log the cleanup admin action
+        await logAdminAction(`Deleted bookings and logs older than ${retentionDays} days`, currentUser.email);
 
         // Reload activity log after cleanup
         await loadActivityLog();
