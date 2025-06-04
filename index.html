@@ -430,7 +430,13 @@
         document.getElementById("date-controls").style.display = "none";
       }
     });
-    
+    function formatDate(dateString) {
+      const d = new Date(dateString);
+      const year = d.getUTCFullYear();
+      const month = String(d.getUTCMonth() + 1).padStart(2, '0');
+      const day = String(d.getUTCDate()).padStart(2, '0');
+      return `${month}/${day}/${year.toString().slice(-2)}`;
+    }
     async function loadActivityLog() {
       const logList = document.getElementById("log-list");
       logList.innerHTML = "";
@@ -451,7 +457,7 @@
           minute: '2-digit'
         });
         const li = document.createElement("li");
-        li.textContent = `[${actionTime}] ${log.email} ${log.action.toLowerCase()} "${log.room}" for ${log.time} on ${log.date}`;
+        li.textContent = `[${actionTime}] ${log.email} ${log.action.toLowerCase()} "${log.room}" for ${log.time} on ${formatDate(log.date)}`;
         logList.appendChild(li);
       });
     }
