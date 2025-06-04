@@ -454,27 +454,19 @@
         document.getElementById("date-controls").style.display = "none";
       }
     });
-    function formatDate(date) {
-      if (!date) return ""; // handle null/undefined
-
-      // If Firestore Timestamp, convert to Date
+    const formatDate = (date) => {
+      if (!date) return "";
       if (typeof date.toDate === 'function') {
         date = date.toDate();
-      }
-
-      // If it's still not a Date object, try to parse as date string
-      if (!(date instanceof Date)) {
+      } else if (!(date instanceof Date)) {
         date = new Date(date);
       }
-
-      if (isNaN(date)) return ""; // invalid date guard
-
+      if (isNaN(date)) return "";
       const year = date.getFullYear();
       const month = String(date.getMonth() + 1).padStart(2, '0');
       const day = String(date.getDate()).padStart(2, '0');
-
       return `${month}/${day}/${year.toString().slice(-2)}`;
-    }
+    };
 
 
     async function loadActivityLog() {
@@ -695,7 +687,7 @@
           room,
           time,
           email,
-          bookingDate,
+          bookingDate: firebase.firestore.Timestamp.fromDate(new Date(bookingDate)),,
         });
 
         console.log("✅ Event successfully logged.");
@@ -729,7 +721,7 @@
           continue; // skip this slot
         }
         await db.collection("bookings").add({
-          date: selectedDate,
+          date: firebase.firestore.Timestamp.fromDate(new Date(selectedDate)),
           room: rooms[rIdx],
           time: times[tIdx],
           name: `${fname} ${lname}`,
