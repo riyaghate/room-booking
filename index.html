@@ -444,7 +444,7 @@
       const logList = document.getElementById("log-list");
       logList.innerHTML = "";
       const snapshot = await db.collection("activityLog")
-        .where("date", "==", selectedDate)
+        .where("bookingDate", "==", selectedDate)
         .orderBy("timestamp", "desc")
         .get();
 
