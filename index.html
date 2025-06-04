@@ -457,7 +457,7 @@
           minute: '2-digit'
         });
         const li = document.createElement("li");
-        li.textContent = `[${actionTime}] ${log.email} ${log.action.toLowerCase()} "${log.room}" for ${log.time} on ${formatDate(log.date)}`;
+        li.textContent = `[${actionTime}] ${log.email} ${log.action.toLowerCase()} "${log.room}" for ${log.time} on ${log.date}`;
         logList.appendChild(li);
       });
     }
