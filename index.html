@@ -460,7 +460,7 @@
           minute: '2-digit'
         });
         const li = document.createElement("li");
-        li.textContent = `[${actionTime}] ${log.email} ${log.action.toLowerCase()} "${log.room}" for ${log.time} on ${formatDate(log.date)}`;
+        li.textContent = `[${actionTime}] ${log.email} ${log.action.toLowerCase()} "${log.room}" for ${log.time} on ${formatDate(log.bookingDate)}`;
         logList.appendChild(li);
       });
     }
@@ -647,10 +647,9 @@
     document.addEventListener("mouseup", () => {
       isMouseDown = false;
     });
-    async function logEvent(action, room, time, email) {
+    async function logEvent(action, room, time, email, bookingDate) {
       try {
         const timestamp = new Date().toISOString();
-        console.log("Logging event:", { action, room, time, email, date: selectedDate });
 
         await db.collection("activityLog").add({
           timestamp,
@@ -658,7 +657,7 @@
           room,
           time,
           email,
-          date: selectedDate
+          bookingDate,
         });
 
         console.log("✅ Event successfully logged.");
@@ -699,7 +698,7 @@
           email,
           reason
         });
-        await logEvent("Booked", rooms[rIdx], times[tIdx], email);
+        await logEvent("Booked", rooms[rIdx], times[tIdx], email, selectedDate);
       }
 
       document.getElementById("fname").value = "";
@@ -722,7 +721,7 @@
       const isAdmin = await checkIfAdmin(currentUser.email); // force check here
       if (isAdmin || isOwner) {
         await db.collection("bookings").doc(unbookingSlot.id).delete();
-        await logEvent("Unbooked", unbookingSlot.room, unbookingSlot.time, currentUser.email);
+        await logEvent("Unbooked", unbookingSlot.room, unbookingSlot.time, currentUser.email, unbookingSlot.date);
         unbookingSlot = null;
         document.getElementById("unbooking-form").style.display = "none";
         await loadBookings();
