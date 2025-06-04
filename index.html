@@ -368,10 +368,19 @@
     <button id="cleanup-btn">Delete Old Bookings & Logs</button>
     <div id="cleanup-status" style="margin-top:10px; color: green;"></div>
   </div>
-  <div id="admin-log"
-    style="display: none; margin-top: 30px; text-align: left; max-width: 800px; margin-left: auto; margin-right: auto;">
-    <h3>Activity Log</h3>
-    <ul id="log-list" style="list-style-type: none; padding: 0;"></ul>
+
+  <div id="admin-panel" style="display: flex; gap: 30px; max-width: 900px; margin: 30px auto; text-align: left;">
+
+    <div id="admin-log" style="flex: 2;">
+      <h3>Activity Log</h3>
+      <ul id="log-list" style="list-style-type: none; padding: 0; max-height: 400px; overflow-y: auto;"></ul>
+    </div>
+
+    <div id="user-list" style="flex: 1;">
+      <h3>User List</h3>
+      <ul id="user-list-items" style="list-style-type: none; padding: 0; max-height: 400px; overflow-y: auto;"></ul>
+    </div>
+
   </div>
 
 
@@ -426,11 +435,14 @@
         const isAdmin = await checkIfAdmin(user.email);
         if (isAdmin) {
           document.getElementById("admin-log").style.display = "block";
-          document.getElementById("cleanup-controls").style.display = "block";  // Show cleanup controls for admins
+          document.getElementById("cleanup-controls").style.display = "block";
+          document.getElementById("admin-panel").style.display = "flex";
           loadActivityLog();
+          loadUserList();
         } else {
           document.getElementById("admin-log").style.display = "none";
           document.getElementById("cleanup-controls").style.display = "none";  // Hide cleanup controls for non-admins
+          document.getElementById("admin-panel").style.display = "none";
         }
         // Update UI
         if (user.displayName) {
@@ -524,7 +536,25 @@
         logList.appendChild(li);
       });
     }
+    async function loadUserList() {
+      const userListEl = document.getElementById("user-list-items");
+      userListEl.innerHTML = "";
 
+      try {
+        // Assuming your users are stored in "users" collection (adjust if different)
+        const snapshot = await db.collection("users").orderBy("email").get();
+
+        snapshot.forEach(doc => {
+          const user = doc.data();
+          const li = document.createElement("li");
+          li.textContent = `${user.name || "(No Name)"} — ${user.email}`;
+          userListEl.appendChild(li);
+        });
+      } catch (err) {
+        userListEl.textContent = "Failed to load users.";
+        console.error("Error loading user list:", err);
+      }
+    }
 
     const rooms = ["Huddle Room 318", "Huddle Room 317", "Huddle Room 315", "Window Office", "Conference Room"];
     const times = Array.from({ length: 22 }, (_, i) => {
