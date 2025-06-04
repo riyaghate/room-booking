@@ -430,13 +430,7 @@
         document.getElementById("date-controls").style.display = "none";
       }
     });
-    function formatDate(isoDate) {
-      const options = { 
-        weekday: 'short', year: 'numeric', month: 'short', day: 'numeric',
-        timeZone: 'America/New_York'
-      };
-      return new Date(isoDate).toLocaleDateString('en-US', options);
-    }
+    
     async function loadActivityLog() {
       const logList = document.getElementById("log-list");
       logList.innerHTML = "";
