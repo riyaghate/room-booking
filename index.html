@@ -431,8 +431,11 @@
       }
     });
     function formatDate(isoDate) {
-      const options = { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' };
-      return new Date(isoDate).toLocaleDateString(undefined, options);
+      const options = { 
+        weekday: 'short', year: 'numeric', month: 'short', day: 'numeric',
+        timeZone: 'America/New_York'
+      };
+      return new Date(isoDate).toLocaleDateString('en-US', options);
     }
     async function loadActivityLog() {
       const logList = document.getElementById("log-list");
@@ -444,7 +447,8 @@
 
       snapshot.forEach(doc => {
         const log = doc.data();
-        const actionTime = new Date(log.timestamp).toLocaleString([], {
+        const actionTime = new Date(log.timestamp).toLocaleString('en-US', {
+          timeZone: 'America/New_York',  // explicitly set the timezone to EST/EDT
           weekday: 'short',
           month: 'short',
           day: 'numeric',
