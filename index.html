@@ -438,7 +438,6 @@
       const logList = document.getElementById("log-list");
       logList.innerHTML = "";
       const snapshot = await db.collection("activityLog")
-        .where("date", "==", selectedDate)
         .orderBy("timestamp", "desc")
         .get();
 
