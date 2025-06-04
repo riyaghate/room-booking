@@ -24,33 +24,30 @@
     }
 
     .header h1 {
-      margin: 0;
-      font-size: 29px;
+        margin: 0;
+        font-size: 29px;
     }
-
     #clock {
       position: absolute;
       left: 50%;
       transform: translateX(-50%);
       font-size: 20px;
-
+      
     }
 
     #sign-out {
       background-color: #ff4d4f;
-      border: none;
+      border:none;
       color: white;
       padding: 8px 14px;
       border-radius: 5px;
       cursor: pointer;
       font-size: 14px;
-      display: inline-block;
+      display:inline-block;
     }
-
     #sign-out:hover {
       background-color: #d9363e;
     }
-
     .date-controls {
       display: flex;
       justify-content: center;
@@ -63,7 +60,6 @@
       width: fit-content;
       max-width: 600px;
     }
-
     .date-controls button {
       padding: 8px 12px;
       background-color: #244564;
@@ -74,23 +70,19 @@
       cursor: pointer;
       transition: background 0.2s;
     }
-
     .date-controls button:hover {
       background-color: #003060;
     }
-
     #custom-date-wrapper {
       display: flex;
       align-items: center;
       gap: 6px;
     }
-
     #date-picker {
       padding: 6px;
       border-radius: 4px;
       border: 1px solid #ccc;
     }
-
     .grid {
       display: grid;
       grid-template-columns: 150px repeat(22, 1fr);
@@ -101,12 +93,11 @@
       background: #f8f9fa;
       padding: 10px;
       border-radius: 3px;
-      box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
-      margin: 0 auto;
+      box-shadow: 0 0 8px rgba(0,0,0,0.1);
+      margin: 0 auto;          
       display: grid;
       justify-content: center;
     }
-
     #sign-in-google {
       padding: 8px 12px;
       background-color: #244564;
@@ -117,11 +108,9 @@
       cursor: pointer;
       transition: background 0.2s;
     }
-
     #sign-in-google:hover {
       background-color: #003060;
     }
-
     #sign-in-microsoft {
       padding: 8px 12px;
       background-color: #244564;
@@ -132,11 +121,9 @@
       cursor: pointer;
       transition: background 0.2s;
     }
-
     #sign-in-microsoft:hover {
       background-color: #003060;
     }
-
     .room-label,
     .time-label,
     .slot {
@@ -147,12 +134,11 @@
       font-size: 12px;
       box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     }
-
     .slot {
-      aspect-ratio: 1 / 1;
+      aspect-ratio: 1 / 1; 
       width: 100%;
       height: 100%;
-
+      
     }
 
     .room-label {
@@ -165,7 +151,6 @@
       text-align: center;
       font-weight: bold;
     }
-
     .time-label {
       color: #818486;
       font-size: 12px;
@@ -176,27 +161,22 @@
       padding: 6px;
       text-align: center;
     }
-
     .available {
       background: #9fe6ae;
       cursor: pointer;
       border-radius: 6px;
-
+      
     }
-
     .available:hover {
       background: #7ab887;
     }
-
     .selected {
       background: #fff176;
       border-radius: 6px;
     }
-
     .selected:hover {
       background: #d8cc5c;
     }
-
     .booked {
       background: #333;
       color: #fff;
@@ -216,7 +196,7 @@
     }
 
     .legend {
-      font-weight: bold;
+      font-weight: bold;      
       text-align: center;
       margin-top: 20px;
       line-height: 1.8;
@@ -228,7 +208,7 @@
       width: 16px;
       height: 16px;
       margin: 0 5px;
-      border-radius: 50%;
+      border-radius: 50%;     
       vertical-align: middle;
     }
 
@@ -244,7 +224,6 @@
       font-family: 'Segoe UI', sans-serif;
       text-align: left;
     }
-
     #booking-form h3 {
       margin-top: 0;
       margin-bottom: 16px;
@@ -252,7 +231,6 @@
       text-align: center;
       color: #003366;
     }
-
     #booking-form input,
     #unbooking-form input {
       width: 100%;
@@ -264,7 +242,6 @@
       box-sizing: border-box;
       transition: border-color 0.2s ease;
     }
-
     #booking-form input:focus {
       border-color: #007bff;
       outline: none;
@@ -286,7 +263,6 @@
     #booking-form button:hover {
       background-color: #002f66;
     }
-
     #admin-log ul {
       padding: 0;
       list-style-type: none;
@@ -300,9 +276,10 @@
       font-family: "Segoe UI", sans-serif;
       font-size: 14px;
       color: #333;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
       line-height: 1.4;
     }
+    
   </style>
 </head>
 
@@ -321,9 +298,9 @@
 
   <div id="date-controls" class="date-controls">
     <button onclick="changeDate(-1)"><strong>&lt</strong> Previous</button>
-    <div id="custom-date-wrapper">
-      <input type="date" id="date-picker" />
-    </div>
+      <div id="custom-date-wrapper">
+        <input type="date" id="date-picker" />
+      </div>
     <button onclick="changeDate(1)">Next <strong>&gt</strong></button>
     <button onclick="goToToday()">Today</button>
   </div>
@@ -358,8 +335,7 @@
       <div style="background:#ddd;"></div> Past
     </div>
   </div>
-  <div id="admin-log"
-    style="display: none; margin-top: 30px; text-align: left; max-width: 800px; margin-left: auto; margin-right: auto;">
+  <div id="admin-log" style="display: none; margin-top: 30px; text-align: left; max-width: 800px; margin-left: auto; margin-right: auto;">
     <h3>Activity Log</h3>
     <ul id="log-list" style="list-style-type: none; padding: 0;"></ul>
   </div>
@@ -427,7 +403,7 @@
         }
         let fullName = user.displayName || "";
         if (!fullName) {
-          // fallback to fname/lname from form if displayName is missing
+        // fallback to fname/lname from form if displayName is missing
           fullName = `${document.getElementById("fname").value} ${document.getElementById("lname").value}`;
         }
         document.getElementById("user-email").textContent = `${fullName} – ${user.email}${isAdmin ? " (Admin)" : ""}`;
@@ -454,34 +430,21 @@
         document.getElementById("date-controls").style.display = "none";
       }
     });
-    const formatDate = (date) => {
-      if (!date) return "";
-      if (typeof date.toDate === 'function') {
-        date = date.toDate();
-      } else if (!(date instanceof Date)) {
-        date = new Date(date);
-      }
-      if (isNaN(date)) return "";
-      const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, '0');
-      const day = String(date.getDate()).padStart(2, '0');
-      return `${month}/${day}/${year.toString().slice(-2)}`;
-    };
-
-
+    function formatDate(isoDate) {
+      const options = { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' };
+      return new Date(isoDate).toLocaleDateString(undefined, options);
+    }
     async function loadActivityLog() {
       const logList = document.getElementById("log-list");
       logList.innerHTML = "";
       const snapshot = await db.collection("activityLog")
-        .where("bookingDate", "==", selectedDate)
+        .where("date", "==", selectedDate)
         .orderBy("timestamp", "desc")
         .get();
 
       snapshot.forEach(doc => {
         const log = doc.data();
-        console.log("Log entry bookingDate:", log.bookingDate);
-        const actionTime = new Date(log.timestamp).toLocaleString('en-US', {
-          timeZone: 'America/New_York',  // explicitly set the timezone to EST/EDT
+        const actionTime = new Date(log.timestamp).toLocaleString([], {
           weekday: 'short',
           month: 'short',
           day: 'numeric',
@@ -490,7 +453,7 @@
           minute: '2-digit'
         });
         const li = document.createElement("li");
-        li.textContent = `[${actionTime}] ${log.email} ${log.action.toLowerCase()} "${log.room}" for ${log.time} on ${formatDate(log.bookingDate)}`;
+        li.textContent = `[${actionTime}] ${log.email} ${log.action.toLowerCase()} "${log.room}" for ${log.time} on ${formatDate(log.date)}`;
         logList.appendChild(li);
       });
     }
@@ -626,7 +589,7 @@
           }
           else {
             div.classList.add("available");
-
+            
             // ✅ Mouse down starts selection
             div.onmousedown = (e) => {
               e.preventDefault();
@@ -658,7 +621,7 @@
                 } else if (!isSelecting && div.classList.contains("selected")) {
                   div.classList.remove("selected");
                   const index = selectedSlots.indexOf(id);
-                  if (index !== -1) selectedSlots.splice(index, 1);
+                if (index !== -1) selectedSlots.splice(index, 1);
                 }
 
                 document.getElementById("booking-form").style.display = selectedSlots.length ? "block" : "none";
@@ -677,9 +640,10 @@
     document.addEventListener("mouseup", () => {
       isMouseDown = false;
     });
-    async function logEvent(action, room, time, email, bookingDate) {
+    async function logEvent(action, room, time, email) {
       try {
         const timestamp = new Date().toISOString();
+        console.log("Logging event:", { action, room, time, email, date: selectedDate });
 
         await db.collection("activityLog").add({
           timestamp,
@@ -687,7 +651,7 @@
           room,
           time,
           email,
-          bookingDate: firebase.firestore.Timestamp.fromDate(new Date(bookingDate)),
+          date: selectedDate
         });
 
         console.log("✅ Event successfully logged.");
@@ -721,14 +685,14 @@
           continue; // skip this slot
         }
         await db.collection("bookings").add({
-          date: firebase.firestore.Timestamp.fromDate(new Date(selectedDate)),
+          date: selectedDate,
           room: rooms[rIdx],
           time: times[tIdx],
           name: `${fname} ${lname}`,
           email,
           reason
         });
-        await logEvent("Booked", rooms[rIdx], times[tIdx], email, selectedDate);
+        await logEvent("Booked", rooms[rIdx], times[tIdx], email);
       }
 
       document.getElementById("fname").value = "";
@@ -751,7 +715,7 @@
       const isAdmin = await checkIfAdmin(currentUser.email); // force check here
       if (isAdmin || isOwner) {
         await db.collection("bookings").doc(unbookingSlot.id).delete();
-        await logEvent("Unbooked", unbookingSlot.room, unbookingSlot.time, currentUser.email, unbookingSlot.date);
+        await logEvent("Unbooked", unbookingSlot.room, unbookingSlot.time, currentUser.email);
         unbookingSlot = null;
         document.getElementById("unbooking-form").style.display = "none";
         await loadBookings();
