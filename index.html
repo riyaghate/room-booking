@@ -431,14 +431,21 @@
       }
     });
     function formatDate(date) {
+      if (!date) return "Invalid Date"; // or return empty string ""
+
       if (typeof date.toDate === 'function') {
         date = date.toDate();
+      } else if (!(date instanceof Date)) {
+      // If date is a string (ISO) or number timestamp, convert to Date
+      date = new Date(date);
       }
+
       const year = date.getFullYear();
       const month = String(date.getMonth() + 1).padStart(2, '0');
       const day = String(date.getDate()).padStart(2, '0');
       return `${month}/${day}/${year.toString().slice(-2)}`;
     }
+
 
     async function loadActivityLog() {
       const logList = document.getElementById("log-list");
@@ -450,6 +457,7 @@
 
       snapshot.forEach(doc => {
         const log = doc.data();
+        console.log("Log entry bookingDate:", log.bookingDate);
         const actionTime = new Date(log.timestamp).toLocaleString('en-US', {
           timeZone: 'America/New_York',  // explicitly set the timezone to EST/EDT
           weekday: 'short',
