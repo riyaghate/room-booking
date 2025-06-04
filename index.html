@@ -479,37 +479,51 @@
       const options = { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' };
       return date.toLocaleDateString(undefined, options);
     }
-    async function loadActivityLog() {
-  const logList = document.getElementById("log-list");
-  logList.innerHTML = "";
-  const snapshot = await db.collection("activityLog")
-    .orderBy("timestamp", "desc")
-    .get();
-
-  snapshot.forEach(doc => {
-    const log = doc.data();
-    const actionTime = new Date(log.timestamp).toLocaleString([], {
-      weekday: 'short',
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-
-    let text;
-    // If room/time/date are "-" (or you can check the action string), simplify text
-    if ((log.room === "-" || !log.room) && (log.time === "-" || !log.time)) {
-      text = `[${actionTime}] ${log.email} ${log.action.toLowerCase()}`;
-    } else {
-      text = `[${actionTime}] ${log.email} ${log.action.toLowerCase()} "${log.room}" for ${log.time} on ${formatDate(log.date)}`;
+    function formatTime12Hour(time24) {
+      if (!time24) return "";
+      const [hourStr, minute] = time24.split(":");
+      let hour = parseInt(hourStr, 10);
+      const ampm = hour >= 12 ? "pm" : "am";
+      hour = hour % 12;
+      if (hour === 0) hour = 12;
+      if (minute === "00") {
+        return `${hour}${ampm}`;
+      } else {
+        return `${hour}:${minute}${ampm}`;
+      }
     }
+    async function loadActivityLog() {
+      const logList = document.getElementById("log-list");
+      logList.innerHTML = "";
+      const snapshot = await db.collection("activityLog")
+        .orderBy("timestamp", "desc")
+        .get();
 
-    const li = document.createElement("li");
-    li.textContent = text;
-    logList.appendChild(li);
-  });
-}
+      snapshot.forEach(doc => {
+        const log = doc.data();
+        const actionTime = new Date(log.timestamp).toLocaleString([], {
+          weekday: 'short',
+          month: 'short',
+          day: 'numeric',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+
+        let text;
+        // If room/time/date are "-" (or you can check the action string), simplify text
+        if ((log.room === "-" || !log.room) && (log.time === "-" || !log.time)) {
+          text = `[${actionTime}] ${log.email} ${log.action.toLowerCase()}`;
+        } else {
+          const formattedTime = formatTime12Hour(log.time);
+          text = `[${actionTime}] ${log.email} ${log.action.toLowerCase()} "${log.room}" for ${formattedTime} on ${formatDate(log.date)}`;
+        }
+
+        const li = document.createElement("li");
+        li.textContent = text;
+        logList.appendChild(li);
+      });
+    }
 
 
     const rooms = ["Huddle Room 318", "Huddle Room 317", "Huddle Room 315", "Window Office", "Conference Room"];
