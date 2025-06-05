@@ -272,6 +272,66 @@
       transition: border-color 0.2s ease;
     }
 
+    #unbooking-form {
+      display: none;
+      background-color: #ffffff;
+      max-width: 350px;
+      margin: 30px auto;
+      padding: 24px;
+      border-radius: 10px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+      font-family: 'Segoe UI', sans-serif;
+      text-align: left;
+    }
+
+    #unbooking-form h3 {
+      margin-top: 0;
+      margin-bottom: 16px;
+      font-size: 20px;
+      text-align: center;
+      color: #003366;
+    }
+
+    #unbooking-form div#unbooking-info {
+      font-size: 14px;
+      color: #244564;
+      margin-bottom: 20px;
+      white-space: pre-line;
+      /* to preserve line breaks */
+    }
+
+    #unbooking-form button {
+      width: 48%;
+      padding: 12px;
+      font-weight: bold;
+      font-size: 14px;
+      border-radius: 6px;
+      cursor: pointer;
+      border: none;
+      transition: background-color 0.2s ease;
+    }
+
+    #unbooking-form button:first-of-type {
+      background-color: #ff4d4f;
+      /* red for Unbook */
+      color: white;
+      margin-right: 4%;
+    }
+
+    #unbooking-form button:first-of-type:hover {
+      background-color: #d9363e;
+    }
+
+    #unbooking-form button:last-of-type {
+      background-color: #cccccc;
+      /* grey for Cancel */
+      color: #333;
+    }
+
+    #unbooking-form button:last-of-type:hover {
+      background-color: #999999;
+    }
+
     #booking-form input:focus {
       border-color: #007bff;
       outline: none;
