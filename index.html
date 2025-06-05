@@ -303,11 +303,33 @@
       box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
       line-height: 1.4;
     }
+
     #user-list-items li {
-      white-space: nowrap;       
-      overflow: hidden;         
-      text-overflow: ellipsis;   
-      max-width: 100%;           
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 100%;
+    }
+
+    #room-tooltip {
+      position: absolute;
+      display: none;
+      background: white;
+      border: 1px solid #ccc;
+      padding: 10px;
+      max-width: 250px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      border-radius: 8px;
+      z-index: 1000;
+      pointer-events: none;
+      /* so it doesn't block mouse */
+    }
+
+    #room-tooltip img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 6px;
+      margin-bottom: 8px;
     }
   </style>
 </head>
@@ -388,7 +410,7 @@
     </div>
 
   </div>
-
+  <div id="room-tooltip"></div>
 
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
@@ -691,9 +713,12 @@
     }
 
     function drawGrid() {
-      grid.innerHTML = "";
-      grid.appendChild(document.createElement("div"));
+      const tooltip = document.getElementById("room-tooltip");
 
+      grid.innerHTML = "";
+      grid.appendChild(document.createElement("div")); // blank top-left corner cell
+
+      // Add time labels at top
       times.forEach(time => {
         const div = document.createElement("div");
         div.className = "time-label";
@@ -701,11 +726,32 @@
         grid.appendChild(div);
       });
 
-
       rooms.forEach((room, rIdx) => {
         const roomDiv = document.createElement("div");
         roomDiv.className = "room-label";
         roomDiv.textContent = room;
+
+        // Add hover events for tooltip with photo + description
+        roomDiv.addEventListener("mouseenter", (e) => {
+          const info = roomDetails[room];
+          if (!info) return;
+
+          tooltip.innerHTML = `
+        <img src="${info.photo}" alt="${room} photo" />
+        <div>${info.description}</div>
+      `;
+          tooltip.style.display = "block";
+
+          // Position tooltip below the room label
+          const rect = e.target.getBoundingClientRect();
+          tooltip.style.top = `${rect.bottom + window.scrollY + 5}px`;
+          tooltip.style.left = `${rect.left + window.scrollX}px`;
+        });
+
+        roomDiv.addEventListener("mouseleave", () => {
+          tooltip.style.display = "none";
+        });
+
         grid.appendChild(roomDiv);
 
         times.forEach((time, tIdx) => {
@@ -713,6 +759,7 @@
           const div = document.createElement("div");
           div.className = "slot";
           div.dataset.id = id;
+
           if (selectedSlots.includes(id)) {
             div.classList.add("selected");
           }
@@ -741,16 +788,15 @@
               unbookingSlot = match;
               document.getElementById("unbooking-info").innerText =
                 `Date: ${match.date}
-      Time: ${match.time}
-      Name: ${match.name}
-      Reason: ${match.reason}
-      Room: ${match.room}
-      \n`;
+                Time: ${match.time}
+                Name: ${match.name}
+                Reason: ${match.reason}
+                Room: ${match.room}
+                \n`;
               document.getElementById("unbooking-form").style.display = "block";
               document.getElementById("booking-form").style.display = "none";
             };
-          }
-          else {
+          } else {
             div.classList.add("available");
 
             // Prevent text/image drag artifacts
@@ -983,6 +1029,28 @@
         console.error("Cleanup error:", err);
       }
     });
+    const roomDetails = {
+      "Huddle Room 318": {
+        photo: "https://example.com/photos/huddle318.jpg",
+        description: "Cozy huddle room with seating for 4, whiteboard, and video conferencing."
+      },
+      "Huddle Room 317": {
+        photo: "https://example.com/photos/huddle317.jpg",
+        description: "Quiet huddle room perfect for small meetings and brainstorming."
+      },
+      "Huddle Room 315": {
+        photo: "https://example.com/photos/huddle315.jpg",
+        description: "Bright room with natural light and advanced AV equipment."
+      },
+      "Window Office": {
+        photo: "https://example.com/photos/windowoffice.jpg",
+        description: "Office with large window overlooking the courtyard."
+      },
+      "Conference Room": {
+        photo: "https://example.com/photos/conferenceroom.jpg",
+        description: "Large conference room with seating for 12 and projector."
+      }
+    };
   </script>
 </body>
 
