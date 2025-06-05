@@ -430,56 +430,63 @@
         }
 
         currentUser = user;
+        const userDoc = db.collection("users").doc(user.uid);
+        const doc = await userDoc.get();
+        if (!doc.exists) {
+          await userDoc.set({
+            email: user.email,
+            name: user.displayName || "",
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+          });
+          // ✅ Check if user is admin from Firestore
+          const isAdmin = await checkIfAdmin(user.email);
+          if (isAdmin) {
+            document.getElementById("admin-log").style.display = "block";
+            document.getElementById("cleanup-controls").style.display = "block";
+            document.getElementById("admin-panel").style.display = "flex";
+            loadActivityLog();
+            loadUserList();
+          } else {
+            document.getElementById("admin-log").style.display = "none";
+            document.getElementById("cleanup-controls").style.display = "none";  // Hide cleanup controls for non-admins
+            document.getElementById("admin-panel").style.display = "none";
+          }
+          // Update UI
+          if (user.displayName) {
+            const [firstName, ...rest] = user.displayName.split(" ");
+            const lastName = rest.join(" ");
+            document.getElementById("fname").value = firstName || "";
+            document.getElementById("lname").value = lastName || "";
+          }
+          let fullName = user.displayName || "";
+          if (!fullName) {
+            // fallback to fname/lname from form if displayName is missing
+            fullName = `${document.getElementById("fname").value} ${document.getElementById("lname").value}`;
+          }
+          document.getElementById("user-email").textContent = `${fullName} – ${user.email}${isAdmin ? " (Admin)" : ""}`;
+          document.getElementById("sign-in-google").style.display = "none";
+          document.getElementById("sign-in-microsoft").style.display = "none";
+          document.getElementById("sign-out").style.display = "inline-block";
 
-        // ✅ Check if user is admin from Firestore
-        const isAdmin = await checkIfAdmin(user.email);
-        if (isAdmin) {
-          document.getElementById("admin-log").style.display = "block";
-          document.getElementById("cleanup-controls").style.display = "block";
-          document.getElementById("admin-panel").style.display = "flex";
-          loadActivityLog();
-          loadUserList();
+          // Auto-fill form fields
+          document.getElementById("email").value = user.email;
+          if (user.displayName) {
+            const [firstName, ...rest] = user.displayName.split(" ");
+            const lastName = rest.join(" ");
+            document.getElementById("fname").value = firstName || "";
+            document.getElementById("lname").value = lastName || "";
+          }
+
+          loadBookings();
         } else {
-          document.getElementById("admin-log").style.display = "none";
-          document.getElementById("cleanup-controls").style.display = "none";  // Hide cleanup controls for non-admins
-          document.getElementById("admin-panel").style.display = "none";
+          // Signed out
+          document.getElementById("sign-in-google").style.display = "inline-block";
+          document.getElementById("sign-in-microsoft").style.display = "inline-block";
+          document.getElementById("sign-out").style.display = "none";
+          document.getElementById("app-container").style.display = "none";
+          document.getElementById("date-controls").style.display = "none";
         }
-        // Update UI
-        if (user.displayName) {
-          const [firstName, ...rest] = user.displayName.split(" ");
-          const lastName = rest.join(" ");
-          document.getElementById("fname").value = firstName || "";
-          document.getElementById("lname").value = lastName || "";
-        }
-        let fullName = user.displayName || "";
-        if (!fullName) {
-          // fallback to fname/lname from form if displayName is missing
-          fullName = `${document.getElementById("fname").value} ${document.getElementById("lname").value}`;
-        }
-        document.getElementById("user-email").textContent = `${fullName} – ${user.email}${isAdmin ? " (Admin)" : ""}`;
-        document.getElementById("sign-in-google").style.display = "none";
-        document.getElementById("sign-in-microsoft").style.display = "none";
-        document.getElementById("sign-out").style.display = "inline-block";
-
-        // Auto-fill form fields
-        document.getElementById("email").value = user.email;
-        if (user.displayName) {
-          const [firstName, ...rest] = user.displayName.split(" ");
-          const lastName = rest.join(" ");
-          document.getElementById("fname").value = firstName || "";
-          document.getElementById("lname").value = lastName || "";
-        }
-
-        loadBookings();
-      } else {
-        // Signed out
-        document.getElementById("sign-in-google").style.display = "inline-block";
-        document.getElementById("sign-in-microsoft").style.display = "inline-block";
-        document.getElementById("sign-out").style.display = "none";
-        document.getElementById("app-container").style.display = "none";
-        document.getElementById("date-controls").style.display = "none";
-      }
-    });
+      });
     function formatDate(dateString) {
       // dateString is like "2025-06-04"
       const parts = dateString.split("-"); // ["2025", "06", "04"]
