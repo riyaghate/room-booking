@@ -575,6 +575,57 @@
 
     const grid = document.getElementById("grid");
     const selectedSlots = [];
+    grid.addEventListener("mousedown", (e) => {
+      if (!e.target.classList.contains("slot")) return;
+
+      e.preventDefault(); // prevent text selection while dragging
+      isMouseDown = true;
+
+      const id = e.target.dataset.id;
+      const alreadySelected = selectedSlots.includes(id);
+      isSelecting = !alreadySelected;
+
+      if (isSelecting) {
+        if (!alreadySelected) {
+          selectedSlots.push(id);
+          e.target.classList.add("selected");
+        }
+      } else {
+        const index = selectedSlots.indexOf(id);
+        if (index !== -1) {
+          selectedSlots.splice(index, 1);
+          e.target.classList.remove("selected");
+        }
+      }
+
+      // Show or hide booking form based on selection count
+      document.getElementById("booking-form").style.display = selectedSlots.length ? "block" : "none";
+      document.getElementById("unbooking-form").style.display = "none";
+    });
+
+    grid.addEventListener("mouseenter", (e) => {
+      if (!isMouseDown) return;
+      if (!e.target.classList.contains("slot")) return;
+
+      const id = e.target.dataset.id;
+      const alreadySelected = selectedSlots.includes(id);
+
+      if (isSelecting) {
+        if (!alreadySelected) {
+          selectedSlots.push(id);
+          e.target.classList.add("selected");
+        }
+      } else {
+        if (alreadySelected) {
+          const index = selectedSlots.indexOf(id);
+          selectedSlots.splice(index, 1);
+          e.target.classList.remove("selected");
+        }
+      }
+
+      document.getElementById("booking-form").style.display = selectedSlots.length ? "block" : "none";
+      document.getElementById("unbooking-form").style.display = "none";
+    }, true); // use capture phase so it works during drag
     const nowEST = () => new Date(new Date().toLocaleString("en-US", { timeZone: "America/New_York" }));
 
     function updateClock() {
@@ -695,45 +746,6 @@
           }
           else {
             div.classList.add("available");
-
-            // ✅ Mouse down starts selection
-            div.onmousedown = (e) => {
-              e.preventDefault();
-              isMouseDown = true;
-              const alreadySelected = div.classList.contains("selected");
-              isSelecting = !alreadySelected;
-
-              // Don't clear all selectedSlots here!
-              if (isSelecting) {
-                if (!selectedSlots.includes(id)) {
-                  selectedSlots.push(id);
-                  div.classList.add("selected");
-                }
-              } else {
-                selectedSlots.splice(selectedSlots.indexOf(id), 1);
-                div.classList.remove("selected");
-              }
-
-              document.getElementById("booking-form").style.display = selectedSlots.length ? "block" : "none";
-              document.getElementById("unbooking-form").style.display = "none";
-            };
-
-            // ✅ Mouse enter to expand selection
-            div.onmouseenter = () => {
-              if (isMouseDown) {
-                if (isSelecting && !div.classList.contains("selected")) {
-                  div.classList.add("selected");
-                  if (!selectedSlots.includes(id)) selectedSlots.push(id);
-                } else if (!isSelecting && div.classList.contains("selected")) {
-                  div.classList.remove("selected");
-                  const index = selectedSlots.indexOf(id);
-                  if (index !== -1) selectedSlots.splice(index, 1);
-                }
-
-                document.getElementById("booking-form").style.display = selectedSlots.length ? "block" : "none";
-                document.getElementById("unbooking-form").style.display = "none";
-              }
-            };
 
             // Prevent text/image drag artifacts
             div.ondragstart = () => false;
