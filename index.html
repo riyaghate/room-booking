@@ -593,6 +593,13 @@
     <div id="cleanup-status" style="margin-top:10px; color: green;"></div>
   </div>
 
+  <div id="admin-toggle" style="display: none; text-align: center; margin-top: 20px;">
+    <button id="toggle-admin-btn"
+      style="padding: 10px 16px; background-color: #244564; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer;">
+      Show Admin Panel
+    </button>
+  </div>
+
   <div id="admin-panel" style="display: none; gap: 30px; max-width: 900px; margin: 30px auto; text-align: left;">
 
     <div id="admin-log" style="flex: 2;">
@@ -671,6 +678,7 @@
           document.getElementById("admin-log").style.display = "block";
           document.getElementById("cleanup-controls").style.display = "block";
           document.getElementById("admin-panel").style.display = "flex";
+          document.getElementById("admin-toggle").style.display = "block";
           loadActivityLog();
           loadUserList();
         } else {
@@ -844,7 +852,7 @@
       document.getElementById("booking-form").style.display = selectedSlots.length ? "block" : "none";
       document.getElementById("unbooking-form").style.display = "none";
     });
-    
+
     const nowEST = () => new Date(new Date().toLocaleString("en-US", { timeZone: "America/New_York" }));
 
     function updateClock() {
@@ -1037,6 +1045,34 @@
         console.error("❌ Failed to log admin action:", err);
       }
     }
+    let isAdminPanelOpen = false;
+
+    document.getElementById("toggle-admin-btn").addEventListener("click", async () => {
+      const panel = document.getElementById("admin-panel");
+      const log = document.getElementById("admin-log");
+      const cleanup = document.getElementById("cleanup-controls");
+      const btn = document.getElementById("toggle-admin-btn");
+
+      if (!isAdminPanelOpen) {
+        // Open it
+        panel.style.display = "flex";
+        log.style.display = "block";
+        cleanup.style.display = "block";
+        btn.textContent = "Hide Admin Panel";
+
+        // Load only now
+        await loadActivityLog();
+        await loadUserList();
+      } else {
+        // Close it
+        panel.style.display = "none";
+        log.style.display = "none";
+        cleanup.style.display = "none";
+        btn.textContent = "Show Admin Panel";
+      }
+
+      isAdminPanelOpen = !isAdminPanelOpen;
+    });
     async function submitBooking() {
       const fname = document.getElementById("fname").value.trim();
       const lname = document.getElementById("lname").value.trim();
