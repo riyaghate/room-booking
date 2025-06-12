@@ -966,7 +966,17 @@
           const [hour, min] = time.split(":");
           const slotTime = new Date(`${selectedDate}T${hour}:${min}:00`);
           const now = nowEST();
-          const isPast = new Date(selectedDate) < new Date(now.toISOString().split("T")[0]) || slotTime < now;
+          const roundedNow = new Date(now);
+
+          // Round up to the next half hour
+          if (now.getMinutes() < 30) {
+            roundedNow.setMinutes(30, 0, 0);
+          } else {
+            roundedNow.setHours(now.getHours() + 1, 0, 0, 0);
+          }
+
+          const isPast = new Date(selectedDate) < new Date(now.toISOString().split("T")[0]) || slotTime < roundedNow;
+
           const match = bookings.find(b => b.room === room && b.time === time);
 
           if (isPast) {
