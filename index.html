@@ -677,7 +677,7 @@
         if (isAdmin) {
           document.getElementById("admin-log").style.display = "block";
           document.getElementById("cleanup-controls").style.display = "block";
-          document.getElementById("admin-panel").style.display = "flex";
+          document.getElementById("admin-panel").style.display = "none";
           document.getElementById("admin-toggle").style.display = "block";
           loadActivityLog();
           loadUserList();
@@ -1054,17 +1054,14 @@
       const btn = document.getElementById("toggle-admin-btn");
 
       if (!isAdminPanelOpen) {
-        // Open it
         panel.style.display = "flex";
         log.style.display = "block";
         cleanup.style.display = "block";
         btn.textContent = "Hide Admin Panel";
 
-        // Load only now
         await loadActivityLog();
         await loadUserList();
       } else {
-        // Close it
         panel.style.display = "none";
         log.style.display = "none";
         cleanup.style.display = "none";
@@ -1073,6 +1070,7 @@
 
       isAdminPanelOpen = !isAdminPanelOpen;
     });
+
     async function submitBooking() {
       const fname = document.getElementById("fname").value.trim();
       const lname = document.getElementById("lname").value.trim();
