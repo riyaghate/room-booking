@@ -801,7 +801,7 @@
     const grid = document.getElementById("grid");
     const selectedSlots = [];
     grid.addEventListener("mousedown", (e) => {
-      if (!e.target.classList.contains("slot")) return;
+      if (!e.target.classList.contains("slot") || e.target.classList.contains("past")) return;
 
       e.preventDefault(); // prevent text selection while dragging
       isMouseDown = true;
@@ -825,8 +825,7 @@
 
     grid.addEventListener("mouseover", (e) => {
       if (!isMouseDown) return;
-      if (!e.target.classList.contains("slot")) return;
-      if (e.target.classList.contains("past")) return;
+      if (!e.target.classList.contains("slot") || e.target.classList.contains("past")) return;
 
       const currentRow = parseInt(e.target.dataset.id.split("-")[0]);
       if (currentRow !== dragStartRow) return;
@@ -906,7 +905,6 @@
 
     function drawGrid() {
       const tooltip = document.getElementById("room-tooltip");
-
       grid.innerHTML = "";
       grid.appendChild(document.createElement("div")); // blank top-left corner cell
 
@@ -934,7 +932,6 @@
       `;
           tooltip.style.display = "block";
 
-          // Position tooltip below the room label
           const rect = e.target.getBoundingClientRect();
           tooltip.style.top = `${rect.bottom + window.scrollY + 5}px`;
           tooltip.style.left = `${rect.left + window.scrollX}px`;
@@ -959,11 +956,21 @@
           const [hour, min] = time.split(":");
           const slotTime = new Date(`${selectedDate}T${hour}:${min}:00`);
           const now = nowEST();
-          const isPast = new Date(selectedDate) < new Date(now.toISOString().split("T")[0]) || slotTime < now;
+
+          // Round current time up to the next half-hour mark
+          const roundedNow = new Date(now);
+          if (now.getMinutes() < 30) {
+            roundedNow.setMinutes(30, 0, 0);
+          } else {
+            roundedNow.setHours(now.getHours() + 1, 0, 0, 0);
+          }
+
+          const isPast = new Date(selectedDate) < new Date(now.toISOString().split("T")[0]) || slotTime < roundedNow;
           const match = bookings.find(b => b.room === room && b.time === time);
 
           if (isPast) {
             div.classList.add("past");
+            div.title = "This time slot has passed";
           } else if (match) {
             const isMine = currentUser && match.email === currentUser.email;
             div.classList.add("booked");
@@ -975,24 +982,22 @@
               div.title = `${match.name} (${match.reason})`;
             }
 
-            if (!isPast) {
-              div.onclick = () => {
-                document.querySelectorAll(".selected").forEach(e => e.classList.remove("selected"));
-                unbookingSlot = match;
-                document.getElementById("unbooking-info").innerText =
-                  `Date: ${match.date}Time: ${match.time} 
-                  Name: ${match.name}
-                  Reason: ${match.reason}
-                  Room: ${match.room}
-                  \n`;
-                document.getElementById("unbooking-form").style.display = "block";
-                document.getElementById("booking-form").style.display = "none";
-              };
-            }
+            // Only allow clicking future slots
+            div.onclick = () => {
+              document.querySelectorAll(".selected").forEach(e => e.classList.remove("selected"));
+              unbookingSlot = match;
+              document.getElementById("unbooking-info").innerText =
+                `Date: ${match.date}
+Time: ${match.time}
+Name: ${match.name}
+Reason: ${match.reason}
+Room: ${match.room}
+\n`;
+              document.getElementById("unbooking-form").style.display = "block";
+              document.getElementById("booking-form").style.display = "none";
+            };
           } else {
             div.classList.add("available");
-
-            // Prevent text/image drag artifacts
             div.ondragstart = () => false;
           }
 
@@ -1000,29 +1005,7 @@
         });
       });
     }
-    document.addEventListener("mouseup", () => {
-      isMouseDown = false;
-      dragStartRow = null;
-    });
-    async function logEvent(action, room, time, email) {
-      try {
-        const timestamp = new Date().toISOString();
-        console.log("Logging event:", { action, room, time, email, date: selectedDate });
 
-        await db.collection("activityLog").add({
-          timestamp,
-          action,
-          room,
-          time,
-          email,
-          date: selectedDate
-        });
-
-        console.log("✅ Event successfully logged.");
-      } catch (err) {
-        console.error("❌ Failed to log event:", err);
-      }
-    }
     async function logAdminAction(actionDescription, email) {
       try {
         const timestamp = new Date().toISOString();
