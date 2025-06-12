@@ -615,6 +615,7 @@
   <script>
     let isMouseDown = false;
     let isSelecting = true; // true = selecting, false = unselecting
+    let dragStartRow = null;
 
     const firebaseConfig = {
       apiKey: "AIzaSyAv2l6sulhI9Rq2P-TB1DXpUlrWIB2BUqE",
@@ -800,8 +801,10 @@
     const grid = document.getElementById("grid");
     const selectedSlots = [];
     grid.addEventListener("mousedown", (e) => {
-      if (!e.target.classList.contains("slot")) return;
-
+      if (!e.target.classList.contains("slot")) {
+        dragStartRow = parseInt(e.target.dataset.id.split("-")[0]); // Get row index
+        return;
+      }
       e.preventDefault(); // prevent text selection while dragging
       isMouseDown = true;
 
@@ -830,6 +833,9 @@
     grid.addEventListener("mouseenter", (e) => {
       if (!isMouseDown) return;
       if (!e.target.classList.contains("slot")) return;
+
+      const currentRow = parseInt(e.target.dataset.id.split("-")[0]);
+      if (currentRow !== dragStartRow) return;
 
       const id = e.target.dataset.id;
       const alreadySelected = selectedSlots.includes(id);
@@ -1005,6 +1011,7 @@
     }
     document.addEventListener("mouseup", () => {
       isMouseDown = false;
+      dragStartRow = null;
     });
     async function logEvent(action, room, time, email) {
       try {
