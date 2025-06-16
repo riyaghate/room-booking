@@ -1164,6 +1164,17 @@
       document.getElementById("unbooking-form").style.display = "none";
       unbookingSlot = null;
     }
+    function updateFormVisibility() {
+      const bookingForm = document.getElementById("booking-form");
+      const unbookingForm = document.getElementById("unbooking-form");
+
+      if (selectedSlots.length > 0) {
+        bookingForm.style.display = "block";
+        unbookingForm.style.display = "none";
+      } else {
+        bookingForm.style.display = "none";
+      }
+    }
 
     let justFinishedDrag = false;
 
