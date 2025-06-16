@@ -931,7 +931,7 @@
         roomDiv.className = "room-label";
         roomDiv.textContent = room;
 
-        // Add hover events for tooltip with photo + description
+        // Tooltip with image + description
         roomDiv.addEventListener("mouseenter", (e) => {
           const info = roomDetails[room];
           if (!info) return;
@@ -942,7 +942,6 @@
       `;
           tooltip.style.display = "block";
 
-          // Position tooltip below the room label
           const rect = e.target.getBoundingClientRect();
           tooltip.style.top = `${rect.bottom + window.scrollY + 5}px`;
           tooltip.style.left = `${rect.left + window.scrollX}px`;
@@ -968,9 +967,8 @@
           const slotTime = new Date(`${selectedDate}T${hour}:${min}:00`);
           const now = nowEST();
 
+          // Round up to next half-hour
           const roundedNow = new Date(now);
-
-          // Round up to the next half hour
           if (now.getMinutes() < 30) {
             roundedNow.setMinutes(30, 0, 0);
           } else {
@@ -978,7 +976,6 @@
           }
 
           const isPast = new Date(selectedDate) < new Date(now.toISOString().split("T")[0]) || slotTime < roundedNow;
-
           const match = bookings.find(b => b.room === room && b.time === time);
 
           if (isPast) {
@@ -992,32 +989,29 @@
               div.title = `My Booking: ${match.name} (${match.reason})`;
             } else {
               div.title = `${match.name} (${match.reason})`;
+              div.style.cursor = "not-allowed";
+              div.onclick = null;
             }
 
-            div.onclick = async () => {
-              const isMine = currentUser && match.email === currentUser.email;
-              const isAdmin = await checkIfAdmin(currentUser.email);
-
-              if (isMine || isAdmin) {
-                document.querySelectorAll(".selected").forEach(e => e.classList.remove("selected"));
-                unbookingSlot = match;
-                document.getElementById("unbooking-info").innerText =
-                  `Date: ${match.date}
-      Time: ${match.time}
-      Name: ${match.name}
-      Reason: ${match.reason}
-      Room: ${match.room}`;
-                document.getElementById("unbooking-form").style.display = "block";
-                document.getElementById("booking-form").style.display = "none";
-              } else {
-                alert("You are not allowed to unbook this slot.");
-              }
-            };
-
+            if (isMine || (currentUser && checkIfAdmin)) {
+              div.onclick = async () => {
+                const isAdmin = await checkIfAdmin(currentUser.email);
+                if (isMine || isAdmin) {
+                  document.querySelectorAll(".selected").forEach(e => e.classList.remove("selected"));
+                  unbookingSlot = match;
+                  document.getElementById("unbooking-info").innerText =
+                    `Date: ${match.date}
+Time: ${match.time}
+Name: ${match.name}
+Reason: ${match.reason}
+Room: ${match.room}`;
+                  document.getElementById("unbooking-form").style.display = "block";
+                  document.getElementById("booking-form").style.display = "none";
+                }
+              };
+            }
           } else {
             div.classList.add("available");
-
-            // Prevent text/image drag artifacts
             div.ondragstart = () => false;
           }
 
@@ -1025,6 +1019,7 @@
         });
       });
     }
+
     document.addEventListener("mouseup", () => {
       isMouseDown = false;
       isSelecting = null;
