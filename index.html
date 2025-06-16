@@ -803,23 +803,28 @@
     grid.addEventListener("mousedown", (e) => {
       if (!e.target.classList.contains("slot") || e.target.classList.contains("past")) return;
 
-      const id = e.target.dataset.id;
-      const index = selectedSlots.indexOf(id);
+      e.preventDefault();
       isMouseDown = true;
-      dragStartRow = parseInt(id.split("-")[0]);
 
-      // If already selected, deselect it immediately on click
-      if (index !== -1) {
-        selectedSlots.splice(index, 1);
-        e.target.classList.remove("selected");
-      } else {
+      const id = e.target.dataset.id;
+      const currentRow = parseInt(id.split("-")[0]);
+      dragStartRow = currentRow;
+
+      const alreadySelected = selectedSlots.includes(id);
+      isSelecting = !alreadySelected;
+
+      if (isSelecting && !alreadySelected) {
         selectedSlots.push(id);
         e.target.classList.add("selected");
+      } else if (!isSelecting && alreadySelected) {
+        selectedSlots.splice(selectedSlots.indexOf(id), 1);
+        e.target.classList.remove("selected");
       }
 
       document.getElementById("booking-form").style.display = selectedSlots.length ? "block" : "none";
       document.getElementById("unbooking-form").style.display = "none";
     });
+
 
     grid.addEventListener("mouseover", (e) => {
       if (!isMouseDown || isSelecting === null) return;
@@ -1107,7 +1112,7 @@ Room: ${match.room}
       const clickedSlot = e.target.classList.contains("available") || e.target.classList.contains("selected");
       const clickedInsideForm = bookingForm.contains(e.target);
 
-      // Only hide form if not interacting with slot/form
+      // Hide booking form only if clicked outside
       if (
         bookingForm.style.display === "block" &&
         !clickedSlot &&
@@ -1118,13 +1123,10 @@ Room: ${match.room}
         bookingForm.style.display = "none";
       }
 
-      // ✅ Always reset drag state
+      // Reset drag state
       isMouseDown = false;
       dragStartRow = null;
       isSelecting = null;
-
-      // ✅ Don't persist justFinishedDrag; it breaks future interactions
-      justFinishedDrag = false;
     });
 
 
