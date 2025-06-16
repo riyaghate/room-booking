@@ -929,15 +929,12 @@
 
     async function loadBookings() {
       bookings = [];
-      const snapshot = await db.collection("bookings")
-        .where("date", "==", selectedDate)
-        .get();
-
-      snapshot.forEach(doc => {
-        bookings.push({ id: doc.id, ...doc.data() });
-      });
-
-      drawGrid();  // ⬅️ Always redraw grid after fetching
+      const snapshot = await db.collection("bookings").where("date", "==", selectedDate).get();
+      snapshot.forEach(doc => bookings.push({ id: doc.id, ...doc.data() }));
+      drawGrid();
+      if (currentUser && await checkIfAdmin(currentUser.email)) {
+        loadActivityLog();
+      }
     }
 
 
@@ -1076,17 +1073,14 @@ Room: ${match.room}
       const lname = document.getElementById("lname").value.trim();
       const email = document.getElementById("email").value.trim();
       const reason = document.getElementById("reason").value.trim();
-
       if (!fname || !lname || !email || !reason) {
         alert("Please fill in all fields.");
         return;
       }
 
-      let added = false;
-
       for (const id of selectedSlots) {
         const [rIdx, tIdx] = id.split("-").map(Number);
-
+        // ✅ Prevent duplicate bookings
         const existing = await db.collection("bookings")
           .where("date", "==", selectedDate)
           .where("room", "==", rooms[rIdx])
@@ -1096,9 +1090,8 @@ Room: ${match.room}
 
         if (!existing.empty) {
           alert(`You already booked ${rooms[rIdx]} at ${times[tIdx]}`);
-          continue;
+          continue; // skip this slot
         }
-
         await db.collection("bookings").add({
           date: selectedDate,
           room: rooms[rIdx],
@@ -1107,27 +1100,25 @@ Room: ${match.room}
           email,
           reason
         });
-
         await logEvent("Booked", rooms[rIdx], times[tIdx], email);
-        added = true;
       }
 
-      if (added) {
-        await loadBookings();  // ⬅️ Refresh UI after adding
-      }
-
-      selectedSlots.length = 0;
-      document.querySelectorAll(".selected").forEach(el => el.classList.remove("selected"));
-      document.getElementById("booking-form").style.display = "none";
       document.getElementById("reason").value = "";
 
+      // Reset name and email fields to current user's info
       if (currentUser) {
         const displayName = currentUser.displayName || "";
         const [firstName, ...rest] = displayName.split(" ");
+        const lastName = rest.join(" ");
+
         document.getElementById("fname").value = firstName || "";
-        document.getElementById("lname").value = rest.join(" ") || "";
+        document.getElementById("lname").value = lastName || "";
         document.getElementById("email").value = currentUser.email || "";
       }
+      selectedSlots.length = 0;
+      document.getElementById("booking-form").style.display = "none";
+      document.querySelectorAll(".selected").forEach(el => el.classList.remove("selected"));
+      await loadBookings();
     }
 
 
@@ -1140,19 +1131,16 @@ Room: ${match.room}
       }
 
       const isOwner = currentUser.email === unbookingSlot.email;
-      const isAdmin = await checkIfAdmin(currentUser.email);
 
+      const isAdmin = await checkIfAdmin(currentUser.email); // force check here
       if (isAdmin || isOwner) {
         await db.collection("bookings").doc(unbookingSlot.id).delete();
         await logEvent("Unbooked", unbookingSlot.room, unbookingSlot.time, currentUser.email);
-
         unbookingSlot = null;
-        selectedSlots.length = 0;
-
-        await loadBookings();  // ⬅️ Immediately redraws the UI
-
         document.getElementById("unbooking-form").style.display = "none";
+        selectedSlots.length = 0;
         document.querySelectorAll(".selected").forEach(el => el.classList.remove("selected"));
+        await loadBookings();
       } else {
         alert("You can only unbook your own reservations.");
       }
