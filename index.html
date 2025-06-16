@@ -563,6 +563,7 @@
       <input type="text" id="lname" placeholder="Last Name" readonly />
       <input type="email" id="email" placeholder="Email" readonly />
       <input type="text" id="reason" placeholder="Reason" />
+      <input type="text" id="meeting-needs" placeholder="Meeting Needs (optional)" />
       <button onclick="submitBooking()">Submit</button>
     </div>
 
@@ -1117,6 +1118,8 @@ Room: ${match.room}`;
       const lname = document.getElementById("lname").value.trim();
       const email = document.getElementById("email").value.trim();
       const reason = document.getElementById("reason").value.trim();
+      const needs = document.getElementById("meeting-needs").value.trim();
+
       if (!fname || !lname || !email) {
         alert("Please fill in your first name, last name, and email.");
         return;
@@ -1142,7 +1145,8 @@ Room: ${match.room}`;
           time: times[tIdx],
           name: `${fname} ${lname}`,
           email,
-          reason
+          reason,
+          needs
         });
         await logEvent("Booked", rooms[rIdx], times[tIdx], email);
       }
