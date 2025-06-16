@@ -593,6 +593,13 @@
     <div id="cleanup-status" style="margin-top:10px; color: green;"></div>
   </div>
 
+  <div id="admin-toggle" style="display: none; text-align: center; margin-top: 20px;">
+    <button id="toggle-admin-btn"
+      style="padding: 10px 16px; background-color: #244564; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer;">
+      Show Admin Panel
+    </button>
+  </div>
+
   <div id="admin-panel" style="display: none; gap: 30px; max-width: 900px; margin: 30px auto; text-align: left;">
 
     <div id="admin-log" style="flex: 2;">
@@ -670,7 +677,8 @@
         if (isAdmin) {
           document.getElementById("admin-log").style.display = "block";
           document.getElementById("cleanup-controls").style.display = "block";
-          document.getElementById("admin-panel").style.display = "flex";
+          document.getElementById("admin-panel").style.display = "none";
+          document.getElementById("admin-toggle").style.display = "block";
           loadActivityLog();
           loadUserList();
         } else {
@@ -801,15 +809,13 @@
     const grid = document.getElementById("grid");
     const selectedSlots = [];
     grid.addEventListener("mousedown", (e) => {
-      if (!e.target.classList.contains("slot") || e.target.classList.contains("past")) return;
+      if (!e.target.classList.contains("slot")) return;
 
-      e.preventDefault();
+      e.preventDefault(); // prevent text selection while dragging
       isMouseDown = true;
+      dragStartRow = parseInt(e.target.dataset.id.split("-")[0]);
 
       const id = e.target.dataset.id;
-      const currentRow = parseInt(id.split("-")[0]);
-      dragStartRow = currentRow;
-
       const alreadySelected = selectedSlots.includes(id);
       isSelecting = !alreadySelected;
 
@@ -825,10 +831,9 @@
       document.getElementById("unbooking-form").style.display = "none";
     });
 
-
     grid.addEventListener("mouseover", (e) => {
-      if (!isMouseDown || isSelecting === null) return;
-      if (!e.target.classList.contains("slot") || e.target.classList.contains("past")) return;
+      if (!isMouseDown) return;
+      if (!e.target.classList.contains("slot")) return;
 
       const currentRow = parseInt(e.target.dataset.id.split("-")[0]);
       if (currentRow !== dragStartRow) return;
@@ -891,13 +896,17 @@
 
     async function loadBookings() {
       bookings = [];
-      const snapshot = await db.collection("bookings").where("date", "==", selectedDate).get();
-      snapshot.forEach(doc => bookings.push({ id: doc.id, ...doc.data() }));
-      drawGrid();
-      if (currentUser && await checkIfAdmin(currentUser.email)) {
-        loadActivityLog();
-      }
+      const snapshot = await db.collection("bookings")
+        .where("date", "==", selectedDate)
+        .get();
+
+      snapshot.forEach(doc => {
+        bookings.push({ id: doc.id, ...doc.data() });
+      });
+
+      drawGrid();  // ⬅️ Always redraw grid after fetching
     }
+
 
     function formatTo12Hour(timeStr) {
       const [hour, minute] = timeStr.split(":").map(Number);
@@ -908,6 +917,7 @@
 
     function drawGrid() {
       const tooltip = document.getElementById("room-tooltip");
+
       grid.innerHTML = "";
       grid.appendChild(document.createElement("div")); // blank top-left corner cell
 
@@ -935,6 +945,7 @@
       `;
           tooltip.style.display = "block";
 
+          // Position tooltip below the room label
           const rect = e.target.getBoundingClientRect();
           tooltip.style.top = `${rect.bottom + window.scrollY + 5}px`;
           tooltip.style.left = `${rect.left + window.scrollX}px`;
@@ -959,9 +970,9 @@
           const [hour, min] = time.split(":");
           const slotTime = new Date(`${selectedDate}T${hour}:${min}:00`);
           const now = nowEST();
-
-          // Round current time up to the next half-hour mark
           const roundedNow = new Date(now);
+
+          // Round up to the next half hour
           if (now.getMinutes() < 30) {
             roundedNow.setMinutes(30, 0, 0);
           } else {
@@ -969,11 +980,11 @@
           }
 
           const isPast = new Date(selectedDate) < new Date(now.toISOString().split("T")[0]) || slotTime < roundedNow;
+
           const match = bookings.find(b => b.room === room && b.time === time);
 
           if (isPast) {
             div.classList.add("past");
-            div.title = "This time slot has passed";
           } else if (match) {
             const isMine = currentUser && match.email === currentUser.email;
             div.classList.add("booked");
@@ -985,22 +996,23 @@
               div.title = `${match.name} (${match.reason})`;
             }
 
-            // Only allow clicking future slots
             div.onclick = () => {
               document.querySelectorAll(".selected").forEach(e => e.classList.remove("selected"));
               unbookingSlot = match;
               document.getElementById("unbooking-info").innerText =
                 `Date: ${match.date}
-Time: ${match.time}
-Name: ${match.name}
-Reason: ${match.reason}
-Room: ${match.room}
-\n`;
+                Time: ${match.time}
+                Name: ${match.name}
+                Reason: ${match.reason}
+                Room: ${match.room}
+                \n`;
               document.getElementById("unbooking-form").style.display = "block";
               document.getElementById("booking-form").style.display = "none";
             };
           } else {
             div.classList.add("available");
+
+            // Prevent text/image drag artifacts
             div.ondragstart = () => false;
           }
 
@@ -1008,7 +1020,29 @@ Room: ${match.room}
         });
       });
     }
+    document.addEventListener("mouseup", () => {
+      isMouseDown = false;
+      dragStartRow = null;
+    });
+    async function logEvent(action, room, time, email) {
+      try {
+        const timestamp = new Date().toISOString();
+        console.log("Logging event:", { action, room, time, email, date: selectedDate });
 
+        await db.collection("activityLog").add({
+          timestamp,
+          action,
+          room,
+          time,
+          email,
+          date: selectedDate
+        });
+
+        console.log("✅ Event successfully logged.");
+      } catch (err) {
+        console.error("❌ Failed to log event:", err);
+      }
+    }
     async function logAdminAction(actionDescription, email) {
       try {
         const timestamp = new Date().toISOString();
@@ -1025,19 +1059,48 @@ Room: ${match.room}
         console.error("❌ Failed to log admin action:", err);
       }
     }
+    let isAdminPanelOpen = false;
+
+    document.getElementById("toggle-admin-btn").addEventListener("click", async () => {
+      const panel = document.getElementById("admin-panel");
+      const log = document.getElementById("admin-log");
+      const cleanup = document.getElementById("cleanup-controls");
+      const btn = document.getElementById("toggle-admin-btn");
+
+      if (!isAdminPanelOpen) {
+        panel.style.display = "flex";
+        log.style.display = "block";
+        cleanup.style.display = "block";
+        btn.textContent = "Hide Admin Panel";
+
+        await loadActivityLog();
+        await loadUserList();
+      } else {
+        panel.style.display = "none";
+        log.style.display = "none";
+        cleanup.style.display = "none";
+        btn.textContent = "Show Admin Panel";
+      }
+
+      isAdminPanelOpen = !isAdminPanelOpen;
+    });
+
     async function submitBooking() {
       const fname = document.getElementById("fname").value.trim();
       const lname = document.getElementById("lname").value.trim();
       const email = document.getElementById("email").value.trim();
       const reason = document.getElementById("reason").value.trim();
+
       if (!fname || !lname || !email || !reason) {
         alert("Please fill in all fields.");
         return;
       }
 
+      let added = false;
+
       for (const id of selectedSlots) {
         const [rIdx, tIdx] = id.split("-").map(Number);
-        // ✅ Prevent duplicate bookings
+
         const existing = await db.collection("bookings")
           .where("date", "==", selectedDate)
           .where("room", "==", rooms[rIdx])
@@ -1047,8 +1110,9 @@ Room: ${match.room}
 
         if (!existing.empty) {
           alert(`You already booked ${rooms[rIdx]} at ${times[tIdx]}`);
-          continue; // skip this slot
+          continue;
         }
+
         await db.collection("bookings").add({
           date: selectedDate,
           room: rooms[rIdx],
@@ -1057,26 +1121,29 @@ Room: ${match.room}
           email,
           reason
         });
+
         await logEvent("Booked", rooms[rIdx], times[tIdx], email);
+        added = true;
       }
 
+      if (added) {
+        await loadBookings();  // ⬅️ Refresh UI after adding
+      }
+
+      selectedSlots.length = 0;
+      document.querySelectorAll(".selected").forEach(el => el.classList.remove("selected"));
+      document.getElementById("booking-form").style.display = "none";
       document.getElementById("reason").value = "";
 
-      // Reset name and email fields to current user's info
       if (currentUser) {
         const displayName = currentUser.displayName || "";
         const [firstName, ...rest] = displayName.split(" ");
-        const lastName = rest.join(" ");
-
         document.getElementById("fname").value = firstName || "";
-        document.getElementById("lname").value = lastName || "";
+        document.getElementById("lname").value = rest.join(" ") || "";
         document.getElementById("email").value = currentUser.email || "";
       }
-      selectedSlots.length = 0;
-      document.getElementById("booking-form").style.display = "none";
-      document.querySelectorAll(".selected").forEach(el => el.classList.remove("selected"));
-      await loadBookings();
     }
+
 
     async function submitUnbooking() {
       if (!currentUser || !unbookingSlot) {
@@ -1085,16 +1152,19 @@ Room: ${match.room}
       }
 
       const isOwner = currentUser.email === unbookingSlot.email;
+      const isAdmin = await checkIfAdmin(currentUser.email);
 
-      const isAdmin = await checkIfAdmin(currentUser.email); // force check here
       if (isAdmin || isOwner) {
         await db.collection("bookings").doc(unbookingSlot.id).delete();
         await logEvent("Unbooked", unbookingSlot.room, unbookingSlot.time, currentUser.email);
+
         unbookingSlot = null;
-        document.getElementById("unbooking-form").style.display = "none";
         selectedSlots.length = 0;
+
+        await loadBookings();  // ⬅️ Immediately redraws the UI
+
+        document.getElementById("unbooking-form").style.display = "none";
         document.querySelectorAll(".selected").forEach(el => el.classList.remove("selected"));
-        await loadBookings();
       } else {
         alert("You can only unbook your own reservations.");
       }
@@ -1107,28 +1177,50 @@ Room: ${match.room}
 
     let justFinishedDrag = false;
 
+    grid.addEventListener("mouseup", () => {
+      // Drag finished
+      justFinishedDrag = true;
+      setTimeout(() => {
+        justFinishedDrag = false;
+      }, 100); // reset after 100ms
+    });
+
     document.addEventListener("mouseup", function (e) {
+      if (justFinishedDrag) {
+        // Don't clear selection immediately after drag ended
+        return;
+      }
+
       const bookingForm = document.getElementById("booking-form");
       const clickedSlot = e.target.classList.contains("available") || e.target.classList.contains("selected");
       const clickedInsideForm = bookingForm.contains(e.target);
 
-      // Hide booking form only if clicked outside
-      if (
-        bookingForm.style.display === "block" &&
+      if (bookingForm.style.display === "block" &&
         !clickedSlot &&
-        !clickedInsideForm
-      ) {
+        !clickedInsideForm) {
         selectedSlots.length = 0;
         document.querySelectorAll(".selected").forEach(el => el.classList.remove("selected"));
         bookingForm.style.display = "none";
       }
-
-      // Reset drag state
-      isMouseDown = false;
-      dragStartRow = null;
-      isSelecting = null;
     });
+    const wrapper = document.getElementById("custom-date-wrapper");
+    const picker = document.getElementById("date-picker");
 
+    if (picker.showPicker) {
+      wrapper.addEventListener("click", () => {
+        picker.showPicker(); // Opens calendar popup
+      });
+    }
+
+    document.getElementById("sign-in-google").addEventListener("click", async () => {
+      const provider = new firebase.auth.GoogleAuthProvider();
+      provider.setCustomParameters({ prompt: 'select_account' });
+      try {
+        await firebase.auth().signInWithPopup(provider);
+      } catch (error) {
+        alert("Google sign-in failed: " + error.message);
+      }
+    });
 
     document.getElementById("sign-in-microsoft").addEventListener("click", async () => {
       const provider = new firebase.auth.OAuthProvider('microsoft.com');
