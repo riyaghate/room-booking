@@ -581,9 +581,6 @@
       <div style="background:#ddd;"></div> Past
     </div>
   </div>
-
-  <button id="toggle-admin" style="display: none;">Show Admin Controls</button>
-
   <div id="cleanup-controls" style="display:none; margin-top: 20px; border-top: 1px solid #ccc; padding-top: 15px;">
     <h4>Cleanup Old Data</h4>
     <label for="retention-select">Delete data older than:</label>
@@ -671,47 +668,12 @@
         // Move this admin check and UI toggle outside the if-block
         const isAdmin = await checkIfAdmin(user.email);
         if (isAdmin) {
-          const toggleButton = document.getElementById("toggle-admin");
-          const adminPanel = document.getElementById("admin-panel");
-          const adminLog = document.getElementById("admin-log");
-          const cleanupControls = document.getElementById("cleanup-controls");
-
-          // ✅ Start everything hidden
-          adminPanel.style.display = "none";
-          adminLog.style.display = "none";
-          cleanupControls.style.display = "none";
-
-          // ✅ Show the toggle button
-          toggleButton.style.display = "inline-block";
-
-          let adminPanelLoaded = false; // ✅ only load data once
-
-          toggleButton.addEventListener("click", () => {
-            const isVisible = adminPanel.style.display !== "none";
-
-            if (!isVisible) {
-              // ✅ Showing panel: show content + load data (once)
-              adminPanel.style.display = "flex";
-              adminLog.style.display = "block";
-              cleanupControls.style.display = "block";
-              toggleButton.textContent = "Hide Admin Controls";
-
-              if (!adminPanelLoaded) {
-                loadActivityLog();
-                loadUserList();
-                adminPanelLoaded = true;
-              }
-            } else {
-              // ✅ Hiding panel: hide content
-              adminPanel.style.display = "none";
-              adminLog.style.display = "none";
-              cleanupControls.style.display = "none";
-              toggleButton.textContent = "Show Admin Controls";
-            }
-          });
+          document.getElementById("admin-log").style.display = "block";
+          document.getElementById("cleanup-controls").style.display = "block";
+          document.getElementById("admin-panel").style.display = "flex";
+          loadActivityLog();
+          loadUserList();
         } else {
-          // 🔒 Hide everything for non-admins
-          document.getElementById("toggle-admin").style.display = "none";
           document.getElementById("admin-log").style.display = "none";
           document.getElementById("cleanup-controls").style.display = "none";
           document.getElementById("admin-panel").style.display = "none";
@@ -1006,11 +968,7 @@
             roundedNow.setHours(now.getHours() + 1, 0, 0, 0);
           }
 
-          // Compute the *end* of the time slot (30 minutes after start)
-          const slotEndTime = new Date(slotTime.getTime() + 30 * 60000);
-
-          // Now, compare that to current time
-          const isPast = new Date(selectedDate) < new Date(now.toISOString().split("T")[0]) || slotEndTime <= now;
+          const isPast = new Date(selectedDate) < new Date(now.toISOString().split("T")[0]) || slotTime < roundedNow;
           const match = bookings.find(b => b.room === room && b.time === time);
 
           if (isPast) {
@@ -1072,7 +1030,6 @@ Room: ${match.room}
       const lname = document.getElementById("lname").value.trim();
       const email = document.getElementById("email").value.trim();
       const reason = document.getElementById("reason").value.trim();
-
       if (!fname || !lname || !email || !reason) {
         alert("Please fill in all fields.");
         return;
@@ -1080,8 +1037,7 @@ Room: ${match.room}
 
       for (const id of selectedSlots) {
         const [rIdx, tIdx] = id.split("-").map(Number);
-
-        // Check for existing booking
+        // ✅ Prevent duplicate bookings
         const existing = await db.collection("bookings")
           .where("date", "==", selectedDate)
           .where("room", "==", rooms[rIdx])
@@ -1091,10 +1047,8 @@ Room: ${match.room}
 
         if (!existing.empty) {
           alert(`You already booked ${rooms[rIdx]} at ${times[tIdx]}`);
-          continue;
+          continue; // skip this slot
         }
-
-        // Add the booking
         await db.collection("bookings").add({
           date: selectedDate,
           room: rooms[rIdx],
@@ -1103,31 +1057,26 @@ Room: ${match.room}
           email,
           reason
         });
-
         await logEvent("Booked", rooms[rIdx], times[tIdx], email);
       }
 
-      // ✅ Now refresh the booking list to update orange slots
-      await loadBookings();
-
-      // ✅ Clear selection after UI update
-      selectedSlots.length = 0;
-      document.querySelectorAll(".selected").forEach(el => el.classList.remove("selected"));
-      document.getElementById("booking-form").style.display = "none";
-
-      // ✅ Reset form values (prefilled if user is logged in)
       document.getElementById("reason").value = "";
 
+      // Reset name and email fields to current user's info
       if (currentUser) {
         const displayName = currentUser.displayName || "";
         const [firstName, ...rest] = displayName.split(" ");
+        const lastName = rest.join(" ");
+
         document.getElementById("fname").value = firstName || "";
-        document.getElementById("lname").value = rest.join(" ") || "";
+        document.getElementById("lname").value = lastName || "";
         document.getElementById("email").value = currentUser.email || "";
       }
+      selectedSlots.length = 0;
+      document.getElementById("booking-form").style.display = "none";
+      document.querySelectorAll(".selected").forEach(el => el.classList.remove("selected"));
+      await loadBookings();
     }
-
-
 
     async function submitUnbooking() {
       if (!currentUser || !unbookingSlot) {
@@ -1136,25 +1085,20 @@ Room: ${match.room}
       }
 
       const isOwner = currentUser.email === unbookingSlot.email;
-      const isAdmin = await checkIfAdmin(currentUser.email);
 
+      const isAdmin = await checkIfAdmin(currentUser.email); // force check here
       if (isAdmin || isOwner) {
         await db.collection("bookings").doc(unbookingSlot.id).delete();
         await logEvent("Unbooked", unbookingSlot.room, unbookingSlot.time, currentUser.email);
-
         unbookingSlot = null;
-
-        // ✅ Refresh the data BEFORE touching the UI
-        await loadBookings();
-
-        // ✅ Now safely clear selected and form
         document.getElementById("unbooking-form").style.display = "none";
         selectedSlots.length = 0;
         document.querySelectorAll(".selected").forEach(el => el.classList.remove("selected"));
+        await loadBookings();
       } else {
         alert("You can only unbook your own reservations.");
       }
-    }S
+    }
 
     function cancelUnbooking() {
       document.getElementById("unbooking-form").style.display = "none";
