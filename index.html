@@ -581,6 +581,9 @@
       <div style="background:#ddd;"></div> Past
     </div>
   </div>
+
+  <button id="toggle-admin" style="display: none;">Show Admin Controls</button>
+
   <div id="cleanup-controls" style="display:none; margin-top: 20px; border-top: 1px solid #ccc; padding-top: 15px;">
     <h4>Cleanup Old Data</h4>
     <label for="retention-select">Delete data older than:</label>
@@ -591,13 +594,6 @@
     </select>
     <button id="cleanup-btn">Delete Old Bookings & Logs</button>
     <div id="cleanup-status" style="margin-top:10px; color: green;"></div>
-  </div>
-
-  <div id="admin-toggle" style="display: none; text-align: center; margin-top: 20px;">
-    <button id="toggle-admin-btn"
-      style="padding: 10px 16px; background-color: #244564; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer;">
-      Show Admin Panel
-    </button>
   </div>
 
   <div id="admin-panel" style="display: none; gap: 30px; max-width: 900px; margin: 30px auto; text-align: left;">
@@ -675,13 +671,47 @@
         // Move this admin check and UI toggle outside the if-block
         const isAdmin = await checkIfAdmin(user.email);
         if (isAdmin) {
-          document.getElementById("admin-log").style.display = "block";
-          document.getElementById("cleanup-controls").style.display = "block";
-          document.getElementById("admin-panel").style.display = "none";
-          document.getElementById("admin-toggle").style.display = "block";
-          loadActivityLog();
-          loadUserList();
+          const toggleButton = document.getElementById("toggle-admin");
+          const adminPanel = document.getElementById("admin-panel");
+          const adminLog = document.getElementById("admin-log");
+          const cleanupControls = document.getElementById("cleanup-controls");
+
+          // ✅ Start everything hidden
+          adminPanel.style.display = "none";
+          adminLog.style.display = "none";
+          cleanupControls.style.display = "none";
+
+          // ✅ Show the toggle button
+          toggleButton.style.display = "inline-block";
+
+          let adminPanelLoaded = false; // ✅ only load data once
+
+          toggleButton.addEventListener("click", () => {
+            const isVisible = adminPanel.style.display !== "none";
+
+            if (!isVisible) {
+              // ✅ Showing panel: show content + load data (once)
+              adminPanel.style.display = "flex";
+              adminLog.style.display = "block";
+              cleanupControls.style.display = "block";
+              toggleButton.textContent = "Hide Admin Controls";
+
+              if (!adminPanelLoaded) {
+                loadActivityLog();
+                loadUserList();
+                adminPanelLoaded = true;
+              }
+            } else {
+              // ✅ Hiding panel: hide content
+              adminPanel.style.display = "none";
+              adminLog.style.display = "none";
+              cleanupControls.style.display = "none";
+              toggleButton.textContent = "Show Admin Controls";
+            }
+          });
         } else {
+          // 🔒 Hide everything for non-admins
+          document.getElementById("toggle-admin").style.display = "none";
           document.getElementById("admin-log").style.display = "none";
           document.getElementById("cleanup-controls").style.display = "none";
           document.getElementById("admin-panel").style.display = "none";
@@ -809,13 +839,15 @@
     const grid = document.getElementById("grid");
     const selectedSlots = [];
     grid.addEventListener("mousedown", (e) => {
-      if (!e.target.classList.contains("slot")) return;
+      if (!e.target.classList.contains("slot") || e.target.classList.contains("past")) return;
 
-      e.preventDefault(); // prevent text selection while dragging
+      e.preventDefault();
       isMouseDown = true;
-      dragStartRow = parseInt(e.target.dataset.id.split("-")[0]);
 
       const id = e.target.dataset.id;
+      const currentRow = parseInt(id.split("-")[0]);
+      dragStartRow = currentRow;
+
       const alreadySelected = selectedSlots.includes(id);
       isSelecting = !alreadySelected;
 
@@ -831,9 +863,10 @@
       document.getElementById("unbooking-form").style.display = "none";
     });
 
+
     grid.addEventListener("mouseover", (e) => {
-      if (!isMouseDown) return;
-      if (!e.target.classList.contains("slot")) return;
+      if (!isMouseDown || isSelecting === null) return;
+      if (!e.target.classList.contains("slot") || e.target.classList.contains("past")) return;
 
       const currentRow = parseInt(e.target.dataset.id.split("-")[0]);
       if (currentRow !== dragStartRow) return;
@@ -917,7 +950,6 @@
 
     function drawGrid() {
       const tooltip = document.getElementById("room-tooltip");
-
       grid.innerHTML = "";
       grid.appendChild(document.createElement("div")); // blank top-left corner cell
 
@@ -945,7 +977,6 @@
       `;
           tooltip.style.display = "block";
 
-          // Position tooltip below the room label
           const rect = e.target.getBoundingClientRect();
           tooltip.style.top = `${rect.bottom + window.scrollY + 5}px`;
           tooltip.style.left = `${rect.left + window.scrollX}px`;
@@ -970,21 +1001,25 @@
           const [hour, min] = time.split(":");
           const slotTime = new Date(`${selectedDate}T${hour}:${min}:00`);
           const now = nowEST();
-          const roundedNow = new Date(now);
 
-          // Round up to the next half hour
+          // Round current time up to the next half-hour mark
+          const roundedNow = new Date(now);
           if (now.getMinutes() < 30) {
             roundedNow.setMinutes(30, 0, 0);
           } else {
             roundedNow.setHours(now.getHours() + 1, 0, 0, 0);
           }
 
-          const isPast = new Date(selectedDate) < new Date(now.toISOString().split("T")[0]) || slotTime < roundedNow;
+          // Compute the *end* of the time slot (30 minutes after start)
+          const slotEndTime = new Date(slotTime.getTime() + 30 * 60000);
 
+          // Now, compare that to current time
+          const isPast = new Date(selectedDate) < new Date(now.toISOString().split("T")[0]) || slotEndTime <= now;
           const match = bookings.find(b => b.room === room && b.time === time);
 
           if (isPast) {
             div.classList.add("past");
+            div.title = "This time slot has passed";
           } else if (match) {
             const isMine = currentUser && match.email === currentUser.email;
             div.classList.add("booked");
@@ -996,23 +1031,22 @@
               div.title = `${match.name} (${match.reason})`;
             }
 
+            // Only allow clicking future slots
             div.onclick = () => {
               document.querySelectorAll(".selected").forEach(e => e.classList.remove("selected"));
               unbookingSlot = match;
               document.getElementById("unbooking-info").innerText =
                 `Date: ${match.date}
-                Time: ${match.time}
-                Name: ${match.name}
-                Reason: ${match.reason}
-                Room: ${match.room}
-                \n`;
+Time: ${match.time}
+Name: ${match.name}
+Reason: ${match.reason}
+Room: ${match.room}
+\n`;
               document.getElementById("unbooking-form").style.display = "block";
               document.getElementById("booking-form").style.display = "none";
             };
           } else {
             div.classList.add("available");
-
-            // Prevent text/image drag artifacts
             div.ondragstart = () => false;
           }
 
@@ -1020,29 +1054,7 @@
         });
       });
     }
-    document.addEventListener("mouseup", () => {
-      isMouseDown = false;
-      dragStartRow = null;
-    });
-    async function logEvent(action, room, time, email) {
-      try {
-        const timestamp = new Date().toISOString();
-        console.log("Logging event:", { action, room, time, email, date: selectedDate });
 
-        await db.collection("activityLog").add({
-          timestamp,
-          action,
-          room,
-          time,
-          email,
-          date: selectedDate
-        });
-
-        console.log("✅ Event successfully logged.");
-      } catch (err) {
-        console.error("❌ Failed to log event:", err);
-      }
-    }
     async function logAdminAction(actionDescription, email) {
       try {
         const timestamp = new Date().toISOString();
@@ -1059,32 +1071,6 @@
         console.error("❌ Failed to log admin action:", err);
       }
     }
-    let isAdminPanelOpen = false;
-
-    document.getElementById("toggle-admin-btn").addEventListener("click", async () => {
-      const panel = document.getElementById("admin-panel");
-      const log = document.getElementById("admin-log");
-      const cleanup = document.getElementById("cleanup-controls");
-      const btn = document.getElementById("toggle-admin-btn");
-
-      if (!isAdminPanelOpen) {
-        panel.style.display = "flex";
-        log.style.display = "block";
-        cleanup.style.display = "block";
-        btn.textContent = "Hide Admin Panel";
-
-        await loadActivityLog();
-        await loadUserList();
-      } else {
-        panel.style.display = "none";
-        log.style.display = "none";
-        cleanup.style.display = "none";
-        btn.textContent = "Show Admin Panel";
-      }
-
-      isAdminPanelOpen = !isAdminPanelOpen;
-    });
-
     async function submitBooking() {
       const fname = document.getElementById("fname").value.trim();
       const lname = document.getElementById("lname").value.trim();
@@ -1145,6 +1131,8 @@
     }
 
 
+
+
     async function submitUnbooking() {
       if (!currentUser || !unbookingSlot) {
         alert("You must be signed in to unbook.");
@@ -1170,6 +1158,7 @@
       }
     }
 
+
     function cancelUnbooking() {
       document.getElementById("unbooking-form").style.display = "none";
       unbookingSlot = null;
@@ -1177,50 +1166,28 @@
 
     let justFinishedDrag = false;
 
-    grid.addEventListener("mouseup", () => {
-      // Drag finished
-      justFinishedDrag = true;
-      setTimeout(() => {
-        justFinishedDrag = false;
-      }, 100); // reset after 100ms
-    });
-
     document.addEventListener("mouseup", function (e) {
-      if (justFinishedDrag) {
-        // Don't clear selection immediately after drag ended
-        return;
-      }
-
       const bookingForm = document.getElementById("booking-form");
       const clickedSlot = e.target.classList.contains("available") || e.target.classList.contains("selected");
       const clickedInsideForm = bookingForm.contains(e.target);
 
-      if (bookingForm.style.display === "block" &&
+      // Hide booking form only if clicked outside
+      if (
+        bookingForm.style.display === "block" &&
         !clickedSlot &&
-        !clickedInsideForm) {
+        !clickedInsideForm
+      ) {
         selectedSlots.length = 0;
         document.querySelectorAll(".selected").forEach(el => el.classList.remove("selected"));
         bookingForm.style.display = "none";
       }
-    });
-    const wrapper = document.getElementById("custom-date-wrapper");
-    const picker = document.getElementById("date-picker");
 
-    if (picker.showPicker) {
-      wrapper.addEventListener("click", () => {
-        picker.showPicker(); // Opens calendar popup
-      });
-    }
-
-    document.getElementById("sign-in-google").addEventListener("click", async () => {
-      const provider = new firebase.auth.GoogleAuthProvider();
-      provider.setCustomParameters({ prompt: 'select_account' });
-      try {
-        await firebase.auth().signInWithPopup(provider);
-      } catch (error) {
-        alert("Google sign-in failed: " + error.message);
-      }
+      // Reset drag state
+      isMouseDown = false;
+      dragStartRow = null;
+      isSelecting = null;
     });
+
 
     document.getElementById("sign-in-microsoft").addEventListener("click", async () => {
       const provider = new firebase.auth.OAuthProvider('microsoft.com');
