@@ -994,19 +994,26 @@
               div.title = `${match.name} (${match.reason})`;
             }
 
-            div.onclick = () => {
-              document.querySelectorAll(".selected").forEach(e => e.classList.remove("selected"));
-              unbookingSlot = match;
-              document.getElementById("unbooking-info").innerText =
-                `Date: ${match.date}
-                Time: ${match.time}
-                Name: ${match.name}
-                Reason: ${match.reason}
-                Room: ${match.room}
-                \n`;
-              document.getElementById("unbooking-form").style.display = "block";
-              document.getElementById("booking-form").style.display = "none";
+            div.onclick = async () => {
+              const isMine = currentUser && match.email === currentUser.email;
+              const isAdmin = await checkIfAdmin(currentUser.email);
+
+              if (isMine || isAdmin) {
+                document.querySelectorAll(".selected").forEach(e => e.classList.remove("selected"));
+                unbookingSlot = match;
+                document.getElementById("unbooking-info").innerText =
+                  `Date: ${match.date}
+      Time: ${match.time}
+      Name: ${match.name}
+      Reason: ${match.reason}
+      Room: ${match.room}`;
+                document.getElementById("unbooking-form").style.display = "block";
+                document.getElementById("booking-form").style.display = "none";
+              } else {
+                alert("You are not allowed to unbook this slot.");
+              }
             };
+
           } else {
             div.classList.add("available");
 
