@@ -1006,7 +1006,11 @@
             roundedNow.setHours(now.getHours() + 1, 0, 0, 0);
           }
 
-          const isPast = new Date(selectedDate) < new Date(now.toISOString().split("T")[0]) || slotTime < roundedNow;
+          // Compute the *end* of the time slot (30 minutes after start)
+          const slotEndTime = new Date(slotTime.getTime() + 30 * 60000);
+
+          // Now, compare that to current time
+          const isPast = new Date(selectedDate) < new Date(now.toISOString().split("T")[0]) || slotEndTime <= now;
           const match = bookings.find(b => b.room === room && b.time === time);
 
           if (isPast) {
