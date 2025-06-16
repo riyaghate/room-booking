@@ -809,13 +809,14 @@
     const grid = document.getElementById("grid");
     const selectedSlots = [];
     grid.addEventListener("mousedown", (e) => {
-      if (!e.target.classList.contains("slot")) return;
+      if (!e.target.classList.contains("slot") || e.target.classList.contains("past")) return;
 
-      e.preventDefault(); // prevent text selection while dragging
+      e.preventDefault();
       isMouseDown = true;
-      dragStartRow = parseInt(e.target.dataset.id.split("-")[0]);
 
       const id = e.target.dataset.id;
+      dragStartRow = parseInt(id.split("-")[0]);
+
       const alreadySelected = selectedSlots.includes(id);
       isSelecting = !alreadySelected;
 
@@ -827,16 +828,16 @@
         e.target.classList.remove("selected");
       }
 
-      document.getElementById("booking-form").style.display = selectedSlots.length ? "block" : "none";
-      document.getElementById("unbooking-form").style.display = "none";
+      updateFormVisibility();
     });
 
+
     grid.addEventListener("mouseover", (e) => {
-      if (!isMouseDown) return;
-      if (!e.target.classList.contains("slot")) return;
+      if (!isMouseDown || isSelecting === null) return;
+      if (!e.target.classList.contains("slot") || e.target.classList.contains("past")) return;
 
       const currentRow = parseInt(e.target.dataset.id.split("-")[0]);
-      if (currentRow !== dragStartRow) return;
+      if (currentRow !== dragStartRow) return;  // restrict to same row
 
       const id = e.target.dataset.id;
       const alreadySelected = selectedSlots.includes(id);
@@ -849,9 +850,9 @@
         e.target.classList.remove("selected");
       }
 
-      document.getElementById("booking-form").style.display = selectedSlots.length ? "block" : "none";
-      document.getElementById("unbooking-form").style.display = "none";
+      updateFormVisibility();
     });
+
 
     const nowEST = () => new Date(new Date().toLocaleString("en-US", { timeZone: "America/New_York" }));
 
@@ -1019,8 +1020,10 @@
     }
     document.addEventListener("mouseup", () => {
       isMouseDown = false;
+      isSelecting = null;
       dragStartRow = null;
     });
+
     async function logEvent(action, room, time, email) {
       try {
         const timestamp = new Date().toISOString();
