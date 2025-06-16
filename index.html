@@ -1101,8 +1101,8 @@ Room: ${match.room}`;
       const lname = document.getElementById("lname").value.trim();
       const email = document.getElementById("email").value.trim();
       const reason = document.getElementById("reason").value.trim();
-      if (!fname || !lname || !email || !reason) {
-        alert("Please fill in all fields.");
+      if (!fname || !lname || !email) {
+        alert("Please fill in your first name, last name, and email.");
         return;
       }
 
