@@ -948,9 +948,9 @@
     function drawGrid() {
       const tooltip = document.getElementById("room-tooltip");
       grid.innerHTML = "";
-      grid.appendChild(document.createElement("div")); // blank top-left corner cell
+      grid.appendChild(document.createElement("div")); // blank top-left cell
 
-      // Add time labels at top
+      // Time labels
       times.forEach(time => {
         const div = document.createElement("div");
         div.className = "time-label";
@@ -963,7 +963,7 @@
         roomDiv.className = "room-label";
         roomDiv.textContent = room;
 
-        // Add hover events for tooltip with photo + description
+        // Tooltip hover
         roomDiv.addEventListener("mouseenter", (e) => {
           const info = roomDetails[room];
           if (!info) return;
@@ -973,7 +973,6 @@
         <div>${info.description}</div>
       `;
           tooltip.style.display = "block";
-
           const rect = e.target.getBoundingClientRect();
           tooltip.style.top = `${rect.bottom + window.scrollY + 5}px`;
           tooltip.style.left = `${rect.left + window.scrollX}px`;
@@ -997,26 +996,14 @@
 
           const [hour, min] = time.split(":");
           const slotTime = new Date(`${selectedDate}T${hour}:${min}:00`);
+          const endTime = new Date(slotTime.getTime() + 60 * 60 * 1000); // 1 hour slot
           const now = nowEST();
 
-          // Round current time up to the next half-hour mark
-          const roundedNow = new Date(now);
-          if (now.getMinutes() < 30) {
-            roundedNow.setMinutes(30, 0, 0);
-          } else {
-            roundedNow.setHours(now.getHours() + 1, 0, 0, 0);
-          }
-
-          // Compute the *end* of the time slot (30 minutes after start)
-          const slotEndTime = new Date(slotTime.getTime() + 30 * 60000);
-
-          // Now, compare that to current time
-          const isPast = new Date(selectedDate) < new Date(now.toISOString().split("T")[0]) || slotEndTime <= now;
+          const isPast = new Date(selectedDate) < new Date(now.toISOString().split("T")[0]) || endTime <= now;
           const match = bookings.find(b => b.room === room && b.time === time);
 
           if (isPast) {
             div.classList.add("past");
-            div.title = "This time slot has passed";
           } else if (match) {
             const isMine = currentUser && match.email === currentUser.email;
             div.classList.add("booked");
@@ -1028,20 +1015,16 @@
               div.title = `${match.name} (${match.reason})`;
             }
 
-            // Only allow clicking future slots
-            div.onclick = () => {
-              document.querySelectorAll(".selected").forEach(e => e.classList.remove("selected"));
-              unbookingSlot = match;
-              document.getElementById("unbooking-info").innerText =
-                `Date: ${match.date}
-Time: ${match.time}
-Name: ${match.name}
-Reason: ${match.reason}
-Room: ${match.room}
-\n`;
-              document.getElementById("unbooking-form").style.display = "block";
-              document.getElementById("booking-form").style.display = "none";
-            };
+            if (!isPast) {
+              div.onclick = () => {
+                document.querySelectorAll(".selected").forEach(e => e.classList.remove("selected"));
+                unbookingSlot = match;
+                document.getElementById("unbooking-info").innerText =
+                  `Date: ${match.date}\nTime: ${match.time}\nName: ${match.name}\nReason: ${match.reason}\nRoom: ${match.room}`;
+                document.getElementById("unbooking-form").style.display = "block";
+                document.getElementById("booking-form").style.display = "none";
+              };
+            }
           } else {
             div.classList.add("available");
             div.ondragstart = () => false;
@@ -1051,6 +1034,7 @@ Room: ${match.room}
         });
       });
     }
+
 
     async function logAdminAction(actionDescription, email) {
       try {
