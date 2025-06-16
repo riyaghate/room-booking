@@ -1103,33 +1103,30 @@ Room: ${match.room}
     let justFinishedDrag = false;
 
     document.addEventListener("mouseup", function (e) {
-      // --- Reset drag state ---
-      const wasDragging = isMouseDown; // store if drag was happening
-      isMouseDown = false;
-      dragStartRow = null;
-      isSelecting = null;
-
-      if (wasDragging) {
-        justFinishedDrag = true;
-        setTimeout(() => {
-          justFinishedDrag = false;
-        }, 100);
-      }
-
-      // --- Handle booking form hide ---
       const bookingForm = document.getElementById("booking-form");
       const clickedSlot = e.target.classList.contains("available") || e.target.classList.contains("selected");
       const clickedInsideForm = bookingForm.contains(e.target);
 
-      if (bookingForm.style.display === "block" &&
+      // Only hide form if not interacting with slot/form
+      if (
+        bookingForm.style.display === "block" &&
         !clickedSlot &&
-        !clickedInsideForm &&
-        !justFinishedDrag) {
+        !clickedInsideForm
+      ) {
         selectedSlots.length = 0;
         document.querySelectorAll(".selected").forEach(el => el.classList.remove("selected"));
         bookingForm.style.display = "none";
       }
+
+      // ✅ Always reset drag state
+      isMouseDown = false;
+      dragStartRow = null;
+      isSelecting = null;
+
+      // ✅ Don't persist justFinishedDrag; it breaks future interactions
+      justFinishedDrag = false;
     });
+
 
     document.getElementById("sign-in-microsoft").addEventListener("click", async () => {
       const provider = new firebase.auth.OAuthProvider('microsoft.com');
