@@ -822,7 +822,7 @@
     });
 
     grid.addEventListener("mouseover", (e) => {
-      if (!isMouseDown) return;
+      if (!isMouseDown || isSelecting === null) return;
       if (!e.target.classList.contains("slot") || e.target.classList.contains("past")) return;
 
       const currentRow = parseInt(e.target.dataset.id.split("-")[0]);
@@ -1105,6 +1105,10 @@ Room: ${match.room}
     grid.addEventListener("mouseup", () => {
       // Drag finished
       justFinishedDrag = true;
+      isMouseDown = false;
+      dragStartRow = null;
+      isSelecting = null; // ✅ this is the key
+
       setTimeout(() => {
         justFinishedDrag = false;
       }, 100); // reset after 100ms
