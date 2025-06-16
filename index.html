@@ -687,7 +687,7 @@
           let adminPanelLoaded = false; // ✅ only load data once
 
           toggleButton.addEventListener("click", () => {
-            const isVisible = adminPanel.style.display === "block";
+            const isVisible = adminPanel.style.display !== "none";
 
             if (!isVisible) {
               // ✅ Showing panel: show content + load data (once)
