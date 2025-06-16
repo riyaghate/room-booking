@@ -809,7 +809,12 @@
     const grid = document.getElementById("grid");
     const selectedSlots = [];
     grid.addEventListener("mousedown", (e) => {
-      if (!e.target.classList.contains("slot") || e.target.classList.contains("past")) return;
+      if (!e.target.classList.contains("slot") ||
+        e.target.classList.contains("past") ||
+        (!e.target.classList.contains("available") && !e.target.classList.contains("selected"))) {
+        return;
+      }
+
 
       e.preventDefault();
       isMouseDown = true;
@@ -833,8 +838,12 @@
 
 
     grid.addEventListener("mouseover", (e) => {
-      if (!isMouseDown || isSelecting === null) return;
-      if (!e.target.classList.contains("slot") || e.target.classList.contains("past")) return;
+      if (!e.target.classList.contains("slot") ||
+        e.target.classList.contains("past") ||
+        (!e.target.classList.contains("available") && !e.target.classList.contains("selected"))) {
+        return;
+      }
+
 
       const currentRow = parseInt(e.target.dataset.id.split("-")[0]);
       if (currentRow !== dragStartRow) return;  // restrict to same row
