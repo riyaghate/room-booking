@@ -803,7 +803,7 @@
     grid.addEventListener("mousedown", (e) => {
       if (!e.target.classList.contains("slot") || e.target.classList.contains("past")) return;
 
-      e.preventDefault(); // prevent text selection while dragging
+      e.preventDefault(); // prevent text selection
       isMouseDown = true;
       dragStartRow = parseInt(e.target.dataset.id.split("-")[0]);
 
@@ -811,14 +811,22 @@
       const alreadySelected = selectedSlots.includes(id);
       isSelecting = !alreadySelected;
 
-      if (isSelecting && !alreadySelected) {
-        selectedSlots.push(id);
-        e.target.classList.add("selected");
-      } else if (!isSelecting && alreadySelected) {
-        selectedSlots.splice(selectedSlots.indexOf(id), 1);
-        e.target.classList.remove("selected");
+      if (isSelecting) {
+        // Selecting new slot
+        if (!alreadySelected) {
+          selectedSlots.push(id);
+          e.target.classList.add("selected");
+        }
+      } else {
+        // Deselect immediately
+        const index = selectedSlots.indexOf(id);
+        if (index !== -1) {
+          selectedSlots.splice(index, 1);
+          e.target.classList.remove("selected");
+        }
       }
 
+      // Show/hide form accordingly
       document.getElementById("booking-form").style.display = selectedSlots.length ? "block" : "none";
       document.getElementById("unbooking-form").style.display = "none";
     });
