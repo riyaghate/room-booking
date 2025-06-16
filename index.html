@@ -1078,46 +1078,46 @@ Room: ${match.room}
         return;
       }
 
-      // ✅ Preload all existing bookings for this user on this date
-      const userBookingsSnapshot = await db.collection("bookings")
-        .where("date", "==", selectedDate)
-        .where("email", "==", email)
-        .get();
-
-      const userBookings = userBookingsSnapshot.docs.map(doc => ({
-        room: doc.data().room,
-        time: doc.data().time
-      }));
-
       for (const id of selectedSlots) {
         const [rIdx, tIdx] = id.split("-").map(Number);
-        const room = rooms[rIdx];
-        const time = times[tIdx];
 
-        const alreadyBooked = userBookings.some(b => b.room === room && b.time === time);
-        if (alreadyBooked) {
-          alert(`You already booked ${room} at ${time}`);
+        // Check for existing booking
+        const existing = await db.collection("bookings")
+          .where("date", "==", selectedDate)
+          .where("room", "==", rooms[rIdx])
+          .where("time", "==", times[tIdx])
+          .where("email", "==", email)
+          .get();
+
+        if (!existing.empty) {
+          alert(`You already booked ${rooms[rIdx]} at ${times[tIdx]}`);
           continue;
         }
 
+        // Add the booking
         await db.collection("bookings").add({
           date: selectedDate,
-          room,
-          time,
+          room: rooms[rIdx],
+          time: times[tIdx],
           name: `${fname} ${lname}`,
           email,
           reason
         });
 
-        await logEvent("Booked", room, time, email);
+        await logEvent("Booked", rooms[rIdx], times[tIdx], email);
       }
 
-      // ✅ Clear form + selection
-      document.getElementById("reason").value = "";
+      // ✅ Now refresh the booking list to update orange slots
+      await loadBookings();
+
+      // ✅ Clear selection after UI update
       selectedSlots.length = 0;
       document.querySelectorAll(".selected").forEach(el => el.classList.remove("selected"));
+      document.getElementById("booking-form").style.display = "none";
 
-      // ✅ Refill name/email fields if logged in
+      // ✅ Reset form values (prefilled if user is logged in)
+      document.getElementById("reason").value = "";
+
       if (currentUser) {
         const displayName = currentUser.displayName || "";
         const [firstName, ...rest] = displayName.split(" ");
@@ -1125,11 +1125,8 @@ Room: ${match.room}
         document.getElementById("lname").value = rest.join(" ") || "";
         document.getElementById("email").value = currentUser.email || "";
       }
-
-      // ✅ Refresh UI now that bookings are done
-      document.getElementById("booking-form").style.display = "none";
-      await loadBookings(); // ← this makes the slots turn orange immediately
     }
+
 
 
     async function submitUnbooking() {
@@ -1139,20 +1136,25 @@ Room: ${match.room}
       }
 
       const isOwner = currentUser.email === unbookingSlot.email;
+      const isAdmin = await checkIfAdmin(currentUser.email);
 
-      const isAdmin = await checkIfAdmin(currentUser.email); // force check here
       if (isAdmin || isOwner) {
         await db.collection("bookings").doc(unbookingSlot.id).delete();
         await logEvent("Unbooked", unbookingSlot.room, unbookingSlot.time, currentUser.email);
+
         unbookingSlot = null;
+
+        // ✅ Refresh the data BEFORE touching the UI
+        await loadBookings();
+
+        // ✅ Now safely clear selected and form
         document.getElementById("unbooking-form").style.display = "none";
         selectedSlots.length = 0;
         document.querySelectorAll(".selected").forEach(el => el.classList.remove("selected"));
-        await loadBookings();
       } else {
         alert("You can only unbook your own reservations.");
       }
-    }
+    }S
 
     function cancelUnbooking() {
       document.getElementById("unbooking-form").style.display = "none";
