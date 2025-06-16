@@ -1003,14 +1003,12 @@
                 unbookingSlot = match;
                 document.getElementById("unbooking-info").innerText =
                   `Date: ${match.date}
-      Time: ${match.time}
-      Name: ${match.name}
-      Reason: ${match.reason}
-      Room: ${match.room}`;
+    Time: ${match.time}
+    Name: ${match.name}
+    Reason: ${match.reason}
+    Room: ${match.room}`;
                 document.getElementById("unbooking-form").style.display = "block";
                 document.getElementById("booking-form").style.display = "none";
-              } else {
-                alert("You are not allowed to unbook this slot.");
               }
             };
 
