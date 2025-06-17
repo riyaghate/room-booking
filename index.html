@@ -1008,6 +1008,10 @@
             div.classList.add("past");
           } else if (match) {
             const isMine = currentUser && match.email === currentUser.email;
+            const needs = match.needs || "None";
+            div.title = isMine
+              ? `My Booking:\n${match.name}\nReason: ${match.reason || "None"}\nNeeds: ${needs}`
+              : `${match.name}\nReason: ${match.reason || "None"}\nNeeds: ${needs}`;
             div.classList.add("booked");
 
             if (isMine) {
