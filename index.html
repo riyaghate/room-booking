@@ -612,7 +612,13 @@
       <h3>User List</h3>
       <ul id="user-list-items" style="list-style-type: none; padding: 0; max-height: 400px; overflow-y: auto;"></ul>
     </div>
+    <div id="admin-management" style="margin-top: 20px;">
+      <h3>Admins</h3>
+      <ul id="admin-list" style="padding-left: 20px;"></ul>
 
+      <input type="email" id="new-admin-email" placeholder="Add admin by email" style="margin-top: 8px;" />
+      <button onclick="addAdmin()">Add Admin</button>
+    </div>
   </div>
   <div id="room-tooltip"></div>
   <div id="booking-tooltip" style="
@@ -810,6 +816,35 @@
       } catch (err) {
         userListEl.textContent = "Failed to load users.";
         console.error("Error loading user list:", err);
+      }
+    }
+    async function loadAdminList() {
+      const list = document.getElementById("admin-list");
+      list.innerHTML = "";
+      const snapshot = await db.collection("roles").where("role", "==", "admin").get();
+
+      snapshot.forEach(doc => {
+        const li = document.createElement("li");
+        li.textContent = doc.id;
+        list.appendChild(li);
+      });
+    }
+    async function addAdmin() {
+      const email = document.getElementById("new-admin-email").value.trim().toLowerCase();
+      if (!email) {
+        alert("Please enter an email.");
+        return;
+      }
+
+      try {
+        await db.collection("roles").doc(email).set({ role: "admin" });
+        alert(`${email} has been added as an admin.`);
+        document.getElementById("new-admin-email").value = "";
+        await loadAdminList();
+        await logAdminAction(`Added ${email} as admin`, currentUser.email);
+      } catch (err) {
+        console.error("Error adding admin:", err);
+        alert("Failed to add admin.");
       }
     }
 
