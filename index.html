@@ -615,6 +615,19 @@
 
   </div>
   <div id="room-tooltip"></div>
+  <div id="booking-tooltip" style="
+    display: none;
+    position: absolute;
+    z-index: 999;
+    background: #fff;
+    border: 1px solid #ccc;
+    padding: 10px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    font-size: 14px;
+    max-width: 250px;
+    white-space: pre-line;
+  "></div>
 
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
@@ -924,6 +937,7 @@
 
     function drawGrid() {
       const tooltip = document.getElementById("room-tooltip");
+      const bookingTooltip = document.getElementById("booking-tooltip");
 
       grid.innerHTML = "";
       grid.appendChild(document.createElement("div")); // blank top-left corner cell
@@ -951,13 +965,13 @@
             }
           });
 
-          updateFormVisibility(); // Only if you already use this
+          updateFormVisibility();
         };
 
         roomDiv.className = "room-label";
         roomDiv.textContent = room;
 
-        // Tooltip with image + description
+        // Room tooltip with photo + description
         roomDiv.addEventListener("mouseenter", (e) => {
           const info = roomDetails[room];
           if (!info) return;
@@ -993,7 +1007,6 @@
           const slotTime = new Date(`${selectedDate}T${hour}:${min}:00`);
           const now = nowEST();
 
-          // Round up to next half-hour
           const roundedNow = new Date(now);
           if (now.getMinutes() < 30) {
             roundedNow.setMinutes(30, 0, 0);
@@ -1009,16 +1022,29 @@
           } else if (match) {
             const isMine = currentUser && match.email === currentUser.email;
             const needs = match.needs || "None";
-            div.title = isMine
-              ? `My Booking:\n${match.name}\nReason: ${match.reason || "None"}\nNeeds: ${needs}`
-              : `${match.name}\nReason: ${match.reason || "None"}\nNeeds: ${needs}`;
+
             div.classList.add("booked");
+
+            div.addEventListener("mouseenter", (e) => {
+              const content = isMine
+                ? `<strong>My Booking:</strong><br>${match.name}<br><em>Reason:</em> ${match.reason || "None"}<br><em>Needs:</em> ${needs}`
+                : `<strong>${match.name}</strong><br><em>Reason:</em> ${match.reason || "None"}<br><em>Needs:</em> ${needs}`;
+
+              bookingTooltip.innerHTML = content;
+              bookingTooltip.style.display = "block";
+
+              const rect = e.target.getBoundingClientRect();
+              bookingTooltip.style.top = `${rect.top + window.scrollY}px`;
+              bookingTooltip.style.left = `${rect.right + window.scrollX + 8}px`;
+            });
+
+            div.addEventListener("mouseleave", () => {
+              bookingTooltip.style.display = "none";
+            });
 
             if (isMine) {
               div.style.background = "orange";
-              div.title = `My Booking: ${match.name} (${match.reason})`;
             } else {
-              div.title = `${match.name} (${match.reason})`;
               div.style.cursor = "not-allowed";
               div.onclick = null;
             }
@@ -1031,15 +1057,16 @@
                   unbookingSlot = match;
                   document.getElementById("unbooking-info").innerText =
                     `Date: ${match.date}
-Time: ${match.time}
-Name: ${match.name}
-Reason: ${match.reason}
-Room: ${match.room}`;
+                    Time: ${match.time}
+                    Name: ${match.name}
+                    Reason: ${match.reason}
+                    Room: ${match.room}`;
                   document.getElementById("unbooking-form").style.display = "block";
                   document.getElementById("booking-form").style.display = "none";
                 }
               };
             }
+
           } else {
             div.classList.add("available");
             div.ondragstart = () => false;
