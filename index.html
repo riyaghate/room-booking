@@ -200,6 +200,11 @@
       border-radius: 6px;
     }
 
+    .slot.unbooking-selected {
+      background-color: #fff176;
+      border: 2px solid #ccc;
+    }
+
     .selected:hover {
       background: #d8cc5c;
     }
@@ -1089,14 +1094,20 @@
               div.onclick = async () => {
                 const isAdmin = await checkIfAdmin(currentUser.email);
                 if (isMine || isAdmin) {
-                  document.querySelectorAll(".selected").forEach(e => e.classList.remove("selected"));
+                  // Clear previous selections
+                  document.querySelectorAll(".unbooking-selected").forEach(e => e.classList.remove("unbooking-selected"));
+
+                  // Mark this slot
+                  div.classList.add("unbooking-selected");
                   unbookingSlot = match;
+
+                  // Show the form
                   document.getElementById("unbooking-info").innerText =
                     `Date: ${match.date}
-                    Time: ${match.time}
-                    Name: ${match.name}
-                    Reason: ${match.reason}
-                    Room: ${match.room}`;
+                  Time: ${match.time}
+                  Name: ${match.name}
+                  Reason: ${match.reason}
+                  Room: ${match.room}`;
                   document.getElementById("unbooking-form").style.display = "block";
                   document.getElementById("booking-form").style.display = "none";
                 }
@@ -1259,6 +1270,7 @@
         document.getElementById("unbooking-form").style.display = "none";
         selectedSlots.length = 0;
         document.querySelectorAll(".selected").forEach(el => el.classList.remove("selected"));
+        document.querySelectorAll(".unbooking-selected").forEach(el => el.classList.remove("unbooking-selected"));
         await loadBookings();
       } else {
         alert("You can only unbook your own reservations.");
