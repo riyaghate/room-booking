@@ -1325,6 +1325,7 @@
         !clickedInsideForm) {
         selectedSlots.length = 0;
         document.querySelectorAll(".selected").forEach(el => el.classList.remove("selected"));
+        document.querySelectorAll(".unbooking-selected").forEach(e => e.classList.remove("unbooking-selected"));
         bookingForm.style.display = "none";
       }
     });
