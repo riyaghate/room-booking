@@ -200,6 +200,10 @@
       border-radius: 6px;
     }
 
+    .slot.mine {
+      background-color: orange;
+    }
+
     .slot.unbooking-selected {
       background-color: #fff176;
       border: 2px solid #ccc;
@@ -1084,7 +1088,7 @@
             });
 
             if (isMine) {
-              div.style.background = "orange";
+              div.classList.add("mine");
             } else {
               div.style.cursor = "not-allowed";
               div.onclick = null;
@@ -1098,6 +1102,7 @@
                   document.querySelectorAll(".unbooking-selected").forEach(e => e.classList.remove("unbooking-selected"));
 
                   // Mark this slot
+                  div.classList.remove("mine");
                   div.classList.add("unbooking-selected");
                   unbookingSlot = match;
 
