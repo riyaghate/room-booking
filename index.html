@@ -1187,8 +1187,8 @@
 
         // Only load once per session
         if (!adminDataLoaded) {
+          await logAdminAction("viewed the admin panel", currentUser.email);
           await loadActivityLog();
-          await logAdminAction("viewed the activity log", currentUser.email);
           await loadUserList();
           await loadAdminList();
           adminDataLoaded = true;
