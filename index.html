@@ -760,7 +760,7 @@
       const day = parseInt(parts[2], 10);
       const date = new Date(year, month, day); // local midnight, no UTC shift
 
-      const options = { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' };
+      const options = { year: 'numeric', month: 'short', day: 'numeric' };
       return date.toLocaleDateString(undefined, options);
     }
     function formatTime12Hour(time24) {
@@ -786,7 +786,6 @@
       snapshot.forEach(doc => {
         const log = doc.data();
         const actionTime = new Date(log.timestamp).toLocaleString([], {
-          weekday: 'short',
           month: 'short',
           day: 'numeric',
           year: 'numeric',
@@ -800,7 +799,7 @@
           text = `[${actionTime}] ${log.email} ${log.action.toLowerCase()}`;
         } else {
           const formattedTime = formatTime12Hour(log.time);
-          text = `[${actionTime}] ${log.email} ${log.action.toLowerCase()} "${log.room}" for ${formattedTime} on ${formatDate(log.date)}`;
+          text = `[${actionTime}] ${log.email} ${log.action.toLowerCase()} ${log.room} for ${formattedTime} on ${formatDate(log.date)}`;
         }
 
         const li = document.createElement("li");
